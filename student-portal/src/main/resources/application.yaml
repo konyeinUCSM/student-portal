@@ -1,3 +1,24 @@
 spring:
   application:
     name: student-portal
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  mvc:
+    favicon:
+      enabled: false      
+
+server:
+  port: 8081
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:default-dev-secret-key-that-is-at-least-sixty-four-characters-long-for-hs512-algorithm}
+    expiration-ms: ${JWT_EXPIRATION:86400000}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+  default-admin:
+    username: admin
+    password: admin123
