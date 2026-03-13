@@ -1,0 +1,99 @@
+package com.manulife.studentportal.controller;
+
+import com.manulife.studentportal.dto.request.ChangePasswordRequest;
+import com.manulife.studentportal.dto.request.LoginRequest;
+import com.manulife.studentportal.dto.response.ApiResponse;
+import com.manulife.studentportal.dto.response.LoginResponse;
+import com.manulife.studentportal.security.SecurityService;
+import com.manulife.studentportal.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
+@Tag(name = "Authentication", description = "Authentication management endpoints")
+public class AuthController {
+
+    private final AuthService authService;
+    private final SecurityService securityService;
+
+    @PostMapping("/login")
+    @Operation(summary = "Login", description = "Authenticate user and return JWT token")
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
+            @Valid @RequestBody LoginRequest loginRequest,
+            HttpServletRequest request) {
+
+        // Extract IP address from request
+        String ipAddress = request.getHeader("X-Forwarded-For");
+        if (ipAddress == null || ipAddress.isEmpty()) {
+            ipAddress = request.getRemoteAddr();
+        }
+
+        LoginResponse response = authService.login(loginRequest, ipAddress);
+
+        return ResponseEntity.ok(
+            ApiResponse.<LoginResponse>builder()
+                .success(true)
+                .message("Login successful")
+                .data(response)
+                .build()
+        );
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Logout", description = "Invalidate current session")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestHeader("Authorization") String authHeader) {
+
+        // Extract token from Bearer header
+        String token = authHeader.replace("Bearer ", "");
+        authService.logout(token);
+
+        return ResponseEntity.ok(
+            ApiResponse.<Void>builder()
+                .success(true)
+                .message("Logout successful")
+                .build()
+        );
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user", description = "Get current authenticated user information")
+    public ResponseEntity<ApiResponse<LoginResponse.UserSummary>> getCurrentUser(
+            @RequestHeader("Authorization") String authHeader) {
+
+        String token = authHeader.replace("Bearer ", "");
+        LoginResponse.UserSummary userSummary = authService.getCurrentUser(token);
+
+        return ResponseEntity.ok(
+            ApiResponse.<LoginResponse.UserSummary>builder()
+                .success(true)
+                .message("Current user retrieved successfully")
+                .data(userSummary)
+                .build()
+        );
+    }
+
+    @PostMapping("/change-password")
+    @Operation(summary = "Change password", description = "Change password for current user")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        Long userId = securityService.getCurrentUserId();
+        authService.changePassword(request, userId);
+
+        return ResponseEntity.ok(
+            ApiResponse.<Void>builder()
+                .success(true)
+                .message("Password changed successfully")
+                .build()
+        );
+    }
+}

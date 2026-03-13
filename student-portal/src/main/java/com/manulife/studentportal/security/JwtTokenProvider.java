@@ -41,6 +41,22 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generateToken(String username, Long userId, String role, Long profileId, String jti) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expirationMs);
+
+        return Jwts.builder()
+                .id(jti)
+                .subject(username)
+                .claim("userId", userId)
+                .claim("role", role)
+                .claim("profileId", profileId)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(key)
+                .compact();
+    }
+
     public Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(key)
@@ -85,5 +101,29 @@ public class JwtTokenProvider {
 
     public long getExpirationMs() {
         return expirationMs;
+    }
+
+    public long getExpirationInSeconds() {
+        return expirationMs / 1000;
+    }
+
+    public String getJtiFromToken(String token) {
+        return parseToken(token).getId();
+    }
+
+    public String getUsernameFromToken(String token) {
+        return parseToken(token).getSubject();
+    }
+
+    public Long getUserIdFromToken(String token) {
+        return parseToken(token).get("userId", Long.class);
+    }
+
+    public String getRoleFromToken(String token) {
+        return parseToken(token).get("role", String.class);
+    }
+
+    public Long getProfileIdFromToken(String token) {
+        return parseToken(token).get("profileId", Long.class);
     }
 }
