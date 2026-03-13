@@ -1,0 +1,164 @@
+package com.manulife.studentportal.service.impl;
+
+import com.manulife.studentportal.dto.request.ChangePasswordRequest;
+import com.manulife.studentportal.dto.request.LoginRequest;
+import com.manulife.studentportal.dto.response.LoginResponse;
+import com.manulife.studentportal.entity.LoginSession;
+import com.manulife.studentportal.entity.Student;
+import com.manulife.studentportal.entity.Teacher;
+import com.manulife.studentportal.entity.User;
+import com.manulife.studentportal.exception.BusinessLogicException;
+import com.manulife.studentportal.exception.ResourceNotFoundException;
+import com.manulife.studentportal.exception.UnauthorizedException;
+import com.manulife.studentportal.repository.LoginSessionRepository;
+import com.manulife.studentportal.repository.StudentRepository;
+import com.manulife.studentportal.repository.TeacherRepository;
+import com.manulife.studentportal.repository.UserRepository;
+import com.manulife.studentportal.security.CustomUserDetails;
+import com.manulife.studentportal.security.JwtTokenProvider;
+import com.manulife.studentportal.service.AuthService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+@Transactional
+public class AuthServiceImpl implements AuthService {
+
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
+    private final LoginSessionRepository loginSessionRepository;
+    private final TeacherRepository teacherRepository;
+    private final StudentRepository studentRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public LoginResponse login(LoginRequest loginRequest, String ipAddress) {
+        log.info("Login attempt for username: {}", loginRequest.getUsername());
+
+        try {
+            // Authenticate via Spring Security
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword()
+                )
+            );
+
+            // Get authenticated user details
+            CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long userId = customUserDetails.getUserId();
+            String role = customUserDetails.getRole();
+
+            log.info("Login successful for userId: {}, role: {}", userId, role);
+
+            // Find profile ID if Teacher or Student
+            Long profileId = null;
+            if ("TEACHER".equals(role)) {
+                Teacher teacher = teacherRepository.findByUserId(userId).orElse(null);
+                profileId = teacher != null ? teacher.getId() : null;
+            } else if ("STUDENT".equals(role)) {
+                Student student = studentRepository.findByUserId(userId).orElse(null);
+                profileId = student != null ? student.getId() : null;
+            }
+
+            // Generate JWT with jti
+            String jti = UUID.randomUUID().toString();
+            String token = jwtTokenProvider.generateToken(
+                loginRequest.getUsername(),
+                userId,
+                role,
+                profileId,
+                jti
+            );
+
+            // Create LoginSession in DB
+            LoginSession loginSession = new LoginSession();
+            loginSession.setTokenId(jti);
+            loginSession.setUser(userRepository.findById(userId).orElseThrow());
+            loginSession.setLoginTime(LocalDateTime.now());
+            loginSession.setExpiryTime(LocalDateTime.now().plusSeconds(jwtTokenProvider.getExpirationInSeconds()));
+            loginSession.setIpAddress(ipAddress);
+            loginSession.setActive(true);
+            loginSessionRepository.save(loginSession);
+
+            // Build response
+            LoginResponse.UserSummary userSummary = LoginResponse.UserSummary.builder()
+                .id(userId)
+                .username(loginRequest.getUsername())
+                .role(role)
+                .profileId(profileId)
+                .build();
+
+            return LoginResponse.builder()
+                .accessToken(token)
+                .tokenType("Bearer")
+                .expiresIn(jwtTokenProvider.getExpirationInSeconds())
+                .user(userSummary)
+                .build();
+
+        } catch (Exception e) {
+            log.warn("Failed login attempt for username: {}", loginRequest.getUsername());
+            throw new UnauthorizedException("Invalid username or password");
+        }
+    }
+
+    @Override
+    public void logout(String token) {
+        // Extract jti from token
+        String jti = jwtTokenProvider.getJtiFromToken(token);
+
+        // Find LoginSession by tokenId and set active = false
+        LoginSession session = loginSessionRepository.findByTokenId(jti)
+            .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+
+        session.setActive(false);
+        loginSessionRepository.save(session);
+
+        log.info("Logout successful for session: {}", jti);
+    }
+
+    @Override
+    public LoginResponse.UserSummary getCurrentUser(String token) {
+        // Extract userId from token
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String username = jwtTokenProvider.getUsernameFromToken(token);
+        String role = jwtTokenProvider.getRoleFromToken(token);
+        Long profileId = jwtTokenProvider.getProfileIdFromToken(token);
+
+        return LoginResponse.UserSummary.builder()
+            .id(userId)
+            .username(username)
+            .role(role)
+            .profileId(profileId)
+            .build();
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Verify old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new BusinessLogicException("Old password is incorrect");
+        }
+
+        // Encode and save new password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        log.info("Password changed successfully for userId: {}", userId);
+    }
+}
