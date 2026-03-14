@@ -1,18 +1,30 @@
 package com.manulife.studentportal.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.manulife.studentportal.dto.response.DashboardStatsResponse;
 import com.manulife.studentportal.dto.response.LoginSessionResponse;
 import com.manulife.studentportal.entity.LoginSession;
 import com.manulife.studentportal.enums.Role;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
-import com.manulife.studentportal.repository.*;
+import com.manulife.studentportal.repository.ExamRepository;
+import com.manulife.studentportal.repository.LoginSessionRepository;
+import com.manulife.studentportal.repository.SchoolClassRepository;
+import com.manulife.studentportal.repository.StudentRepository;
+import com.manulife.studentportal.repository.SubjectRepository;
+import com.manulife.studentportal.repository.TeacherRepository;
+import com.manulife.studentportal.repository.UserRepository;
 import com.manulife.studentportal.service.LoginSessionService;
+
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,27 +45,21 @@ public class LoginSessionServiceImpl implements LoginSessionService {
     public Page<LoginSessionResponse> getAllSessions(Pageable pageable, Long userId, Boolean active) {
         log.debug("Fetching all sessions with filters - userId: {}, active: {}", userId, active);
 
-        Page<LoginSession> sessions;
+        return loginSessionRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        if (userId != null && active != null) {
-            sessions = loginSessionRepository.findByUserIdAndActive(userId, active, pageable);
-        } else if (userId != null) {
-            sessions = loginSessionRepository.findByUserId(userId, pageable);
-        } else if (active != null) {
-            sessions = loginSessionRepository.findByActive(active, pageable);
-        } else {
-            sessions = loginSessionRepository.findAllByOrderByLoginTimeDesc(pageable);
-        }
+            if (userId != null) {
+                predicates.add(cb.equal(root.get("user").get("id"), userId));
+            }
+            if (active != null) {
+                predicates.add(cb.equal(root.get("active"), active));
+            }
 
-        return sessions.map(this::toResponse);
-    }
+            query.orderBy(cb.desc(root.get("loginTime")));
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<LoginSessionResponse> getActiveSessions(Pageable pageable) {
-        log.debug("Fetching active sessions");
-        Page<LoginSession> sessions = loginSessionRepository.findByActiveTrue(pageable);
-        return sessions.map(this::toResponse);
+            return cb.and(predicates.toArray(new Predicate[0]));
+
+        }, pageable).map(this::toResponse);
     }
 
     @Override
@@ -63,13 +69,9 @@ public class LoginSessionServiceImpl implements LoginSessionService {
         LoginSession session = loginSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Session not found with id: " + sessionId));
 
-        Long targetUserId = session.getUser().getId();
-
-        // Set session as inactive
         session.setActive(false);
-        loginSessionRepository.save(session);
 
-        log.info("Session terminated successfully: sessionId={}, targetUserId={}", sessionId, targetUserId);
+        log.info("Session terminated successfully: sessionId={}, userId={}", sessionId, session.getUser().getId());
     }
 
     @Override
@@ -77,32 +79,19 @@ public class LoginSessionServiceImpl implements LoginSessionService {
     public DashboardStatsResponse getDashboardStats() {
         log.debug("Calculating dashboard statistics");
 
-        long totalUsers = userRepository.count();
-        long totalAdmins = userRepository.findByRole(Role.ADMIN, Pageable.unpaged()).getTotalElements();
-        long totalTeachers = teacherRepository.count();
-        long totalStudents = studentRepository.count();
-        long totalClasses = schoolClassRepository.count();
-        long totalSubjects = subjectRepository.count();
-        long totalExams = examRepository.count();
-        long activeSessions = loginSessionRepository.countByActiveTrue();
-
         return DashboardStatsResponse.builder()
-                .totalUsers(totalUsers)
-                .totalAdmins(totalAdmins)
-                .totalTeachers(totalTeachers)
-                .totalStudents(totalStudents)
-                .totalClasses(totalClasses)
-                .totalSubjects(totalSubjects)
-                .totalExams(totalExams)
-                .activeSessions(activeSessions)
+                .totalUsers(userRepository.count())
+                .totalAdmins(userRepository.countByRole(Role.ADMIN))
+                .totalTeachers(teacherRepository.count())
+                .totalStudents(studentRepository.count())
+                .totalClasses(schoolClassRepository.count())
+                .totalSubjects(subjectRepository.count())
+                .totalExams(examRepository.count())
+                .activeSessions(loginSessionRepository.countByActiveTrue())
                 .build();
     }
 
     private LoginSessionResponse toResponse(LoginSession session) {
-        if (session == null) {
-            return null;
-        }
-
         return LoginSessionResponse.builder()
                 .id(session.getId())
                 .userId(session.getUser().getId())
