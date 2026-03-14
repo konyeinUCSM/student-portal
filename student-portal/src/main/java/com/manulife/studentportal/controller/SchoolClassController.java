@@ -18,6 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.manulife.studentportal.security.AdminOnly;
+import com.manulife.studentportal.security.AdminOrTeacher;
+import static com.manulife.studentportal.security.SecurityExpressions.ADMIN_OR_ASSIGNED_TO_CLASS;
 
 import java.util.List;
 
@@ -30,7 +33,7 @@ public class SchoolClassController {
     private final SchoolClassService schoolClassService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Create class", description = "Creates a new school class")
     public ResponseEntity<ApiResponse<SchoolClassResponse>> createClass(
             @Valid @RequestBody CreateClassRequest request) {
@@ -41,7 +44,7 @@ public class SchoolClassController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @AdminOrTeacher
     @Operation(summary = "Get all classes", description = "Retrieves a paginated list of classes. ADMIN gets all, TEACHER gets only assigned classes.")
     public ResponseEntity<ApiResponse<List<SchoolClassResponse>>> getAllClasses(
             @Parameter(description = "Pagination parameters (page, size, sort)")
@@ -59,7 +62,7 @@ public class SchoolClassController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('TEACHER') and @securityService.isTeacherAssignedToClass(#id))")
+    @PreAuthorize(ADMIN_OR_ASSIGNED_TO_CLASS)
     @Operation(summary = "Get class by ID", description = "Retrieves a specific class's details. ADMIN can view any, TEACHER can view only assigned classes.")
     public ResponseEntity<ApiResponse<SchoolClassResponse>> getClassById(
             @Parameter(description = "Class ID") @PathVariable Long id) {
@@ -69,7 +72,7 @@ public class SchoolClassController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Update class", description = "Updates a class's name")
     public ResponseEntity<ApiResponse<SchoolClassResponse>> updateClass(
             @Parameter(description = "Class ID") @PathVariable Long id,
@@ -80,7 +83,7 @@ public class SchoolClassController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Delete class", description = "Soft deletes a school class")
     public ResponseEntity<ApiResponse<Void>> deleteClass(
             @Parameter(description = "Class ID") @PathVariable Long id) {
@@ -90,7 +93,7 @@ public class SchoolClassController {
     }
 
     @GetMapping("/{id}/students")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('TEACHER') and @securityService.isTeacherAssignedToClass(#id))")
+    @PreAuthorize(ADMIN_OR_ASSIGNED_TO_CLASS)
     @Operation(summary = "Get students in class", description = "Retrieves the list of students enrolled in a specific class. ADMIN can view any, TEACHER can view only assigned classes.")
     public ResponseEntity<ApiResponse<List<StudentResponse>>> getClassStudents(
             @Parameter(description = "Class ID") @PathVariable Long id,

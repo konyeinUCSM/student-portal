@@ -134,7 +134,6 @@ public class TeacherServiceImpl implements TeacherService {
 
         // Soft delete
         teacher.setDeleted(true);
-        teacherRepository.save(teacher);
 
         log.info("Teacher soft deleted successfully with id: {}", id);
     }

@@ -17,6 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.manulife.studentportal.security.AdminOnly;
+import com.manulife.studentportal.security.AdminOrTeacher;
+import com.manulife.studentportal.security.AdminTeacherOrStudent;
 
 import java.util.List;
 
@@ -29,7 +32,7 @@ public class ExamController {
     private final ExamService examService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @AdminOrTeacher
     @Operation(summary = "Create exam", description = "Creates a new exam. ADMIN can create for any class/subject. TEACHER can only create for assigned class AND subject.")
     public ResponseEntity<ApiResponse<ExamResponse>> createExam(
             @Valid @RequestBody CreateExamRequest request) {
@@ -40,7 +43,7 @@ public class ExamController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @AdminTeacherOrStudent
     @Operation(summary = "Get all exams", description = "Retrieves a paginated list of exams. ADMIN gets all, TEACHER gets exams for assigned classes, STUDENT gets exams for their class.")
     public ResponseEntity<ApiResponse<List<ExamResponse>>> getAllExams(
             @Parameter(description = "Pagination parameters (page, size, sort)")
@@ -58,7 +61,7 @@ public class ExamController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @AdminTeacherOrStudent
     @Operation(summary = "Get exam by ID", description = "Retrieves a specific exam's details. ADMIN can view any, TEACHER can view exams for assigned classes, STUDENT can view exams for their class.")
     public ResponseEntity<ApiResponse<ExamResponse>> getExamById(
             @Parameter(description = "Exam ID") @PathVariable Long id) {
@@ -68,7 +71,7 @@ public class ExamController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @AdminOrTeacher
     @Operation(summary = "Update exam", description = "Updates exam details (name, date, marks). Class and subject are NOT updatable. ADMIN can update any, TEACHER can only update exams they created.")
     public ResponseEntity<ApiResponse<ExamResponse>> updateExam(
             @Parameter(description = "Exam ID") @PathVariable Long id,
@@ -79,7 +82,7 @@ public class ExamController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Delete exam", description = "Soft deletes an exam. ADMIN only.")
     public ResponseEntity<ApiResponse<Void>> deleteExam(
             @Parameter(description = "Exam ID") @PathVariable Long id) {

@@ -195,7 +195,6 @@ public class StudentServiceImpl implements StudentService {
 
         // Soft delete
         student.setDeleted(true);
-        studentRepository.save(student);
 
         log.info("Student soft deleted successfully with id: {}", id);
     }

@@ -344,7 +344,6 @@ public class MarkServiceImpl implements MarkService {
 
         // Soft delete
         mark.setDeleted(true);
-        markRepository.save(mark);
 
         log.info("Mark soft deleted successfully with id: {}", id);
     }

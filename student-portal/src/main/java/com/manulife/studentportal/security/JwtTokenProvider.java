@@ -106,24 +106,4 @@ public class JwtTokenProvider {
     public long getExpirationInSeconds() {
         return expirationMs / 1000;
     }
-
-    public String getJtiFromToken(String token) {
-        return parseToken(token).getId();
-    }
-
-    public String getUsernameFromToken(String token) {
-        return parseToken(token).getSubject();
-    }
-
-    public Long getUserIdFromToken(String token) {
-        return parseToken(token).get("userId", Long.class);
-    }
-
-    public String getRoleFromToken(String token) {
-        return parseToken(token).get("role", String.class);
-    }
-
-    public Long getProfileIdFromToken(String token) {
-        return parseToken(token).get("profileId", Long.class);
-    }
 }

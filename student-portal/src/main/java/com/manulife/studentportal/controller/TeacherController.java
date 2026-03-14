@@ -21,6 +21,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.manulife.studentportal.security.AdminOnly;
+import static com.manulife.studentportal.security.SecurityExpressions.ADMIN_OR_OWNER_TEACHER;
 
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class TeacherController {
     private final TeacherService teacherService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Create teacher profile", description = "Creates a new teacher profile and links it to an existing user with TEACHER role")
     public ResponseEntity<ApiResponse<TeacherResponse>> createTeacher(
             @Valid @RequestBody CreateTeacherRequest request) {
@@ -44,7 +46,7 @@ public class TeacherController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Get all teachers", description = "Retrieves a paginated list of all teachers")
     public ResponseEntity<ApiResponse<List<TeacherResponse>>> getAllTeachers(
             @Parameter(description = "Pagination parameters (page, size, sort)")
@@ -63,7 +65,7 @@ public class TeacherController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Get teacher by ID", description = "Retrieves a specific teacher's details including assigned classes and subjects")
     public ResponseEntity<ApiResponse<TeacherResponse>> getTeacherById(
             @Parameter(description = "Teacher ID") @PathVariable Long id) {
@@ -73,7 +75,7 @@ public class TeacherController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Update teacher profile", description = "Updates teacher's name and phone. Staff ID is not updatable.")
     public ResponseEntity<ApiResponse<TeacherResponse>> updateTeacher(
             @Parameter(description = "Teacher ID") @PathVariable Long id,
@@ -84,7 +86,7 @@ public class TeacherController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Delete teacher", description = "Soft deletes a teacher profile")
     public ResponseEntity<ApiResponse<Void>> deleteTeacher(
             @Parameter(description = "Teacher ID") @PathVariable Long id) {
@@ -94,7 +96,7 @@ public class TeacherController {
     }
 
     @PutMapping("/{id}/classes")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Assign classes to teacher", description = "Replaces the entire list of assigned classes for a teacher (idempotent PUT)")
     public ResponseEntity<ApiResponse<Void>> assignClasses(
             @Parameter(description = "Teacher ID") @PathVariable Long id,
@@ -105,7 +107,7 @@ public class TeacherController {
     }
 
     @PutMapping("/{id}/subjects")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Assign subjects to teacher", description = "Replaces the entire list of assigned subjects for a teacher (idempotent PUT)")
     public ResponseEntity<ApiResponse<Void>> assignSubjects(
             @Parameter(description = "Teacher ID") @PathVariable Long id,
@@ -116,7 +118,7 @@ public class TeacherController {
     }
 
     @GetMapping("/{id}/classes")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('TEACHER') and @securityService.isTeacherOwner(#id))")
+    @PreAuthorize(ADMIN_OR_OWNER_TEACHER)
     @Operation(summary = "Get assigned classes", description = "Retrieves the list of classes assigned to a teacher. ADMIN can view any, TEACHER can view only their own.")
     public ResponseEntity<ApiResponse<List<SchoolClassResponse>>> getTeacherClasses(
             @Parameter(description = "Teacher ID") @PathVariable Long id) {
@@ -126,7 +128,7 @@ public class TeacherController {
     }
 
     @GetMapping("/{id}/subjects")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('TEACHER') and @securityService.isTeacherOwner(#id))")
+    @PreAuthorize(ADMIN_OR_OWNER_TEACHER)
     @Operation(summary = "Get assigned subjects", description = "Retrieves the list of subjects assigned to a teacher. ADMIN can view any, TEACHER can view only their own.")
     public ResponseEntity<ApiResponse<List<SubjectResponse>>> getTeacherSubjects(
             @Parameter(description = "Teacher ID") @PathVariable Long id) {

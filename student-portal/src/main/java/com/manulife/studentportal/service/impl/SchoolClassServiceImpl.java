@@ -130,7 +130,6 @@ public class SchoolClassServiceImpl implements SchoolClassService {
                 .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + id));
 
         schoolClass.setDeleted(true);
-        schoolClassRepository.save(schoolClass);
 
         log.info("Class soft deleted successfully with id: {}", id);
     }

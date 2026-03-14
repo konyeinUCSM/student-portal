@@ -124,7 +124,6 @@ public class SubjectServiceImpl implements SubjectService {
                 .orElseThrow(() -> new ResourceNotFoundException("Subject not found with id: " + id));
 
         subject.setDeleted(true);
-        subjectRepository.save(subject);
 
         log.info("Subject soft deleted successfully with id: {}", id);
     }

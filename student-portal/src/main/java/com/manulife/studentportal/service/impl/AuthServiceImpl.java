@@ -117,31 +117,27 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void logout(String token) {
         // Extract jti from token
-        String jti = jwtTokenProvider.getJtiFromToken(token);
+        String jti = jwtTokenProvider.getTokenId(token);
 
         // Find LoginSession by tokenId and set active = false
         LoginSession session = loginSessionRepository.findByTokenId(jti)
             .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
 
         session.setActive(false);
-        loginSessionRepository.save(session);
 
         log.info("Logout successful for session: {}", jti);
     }
 
     @Override
     public LoginResponse.UserSummary getCurrentUser(String token) {
-        // Extract userId from token
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        String role = jwtTokenProvider.getRoleFromToken(token);
-        Long profileId = jwtTokenProvider.getProfileIdFromToken(token);
+        // Parse token once and extract all claims
+        var claims = jwtTokenProvider.parseToken(token);
 
         return LoginResponse.UserSummary.builder()
-            .id(userId)
-            .username(username)
-            .role(role)
-            .profileId(profileId)
+            .id(claims.get("userId", Long.class))
+            .username(claims.getSubject())
+            .role(claims.get("role", String.class))
+            .profileId(claims.get("profileId", Long.class))
             .build();
     }
 
@@ -155,9 +151,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessLogicException("Old password is incorrect");
         }
 
-        // Encode and save new password
+        // Encode and set new password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
 
         log.info("Password changed successfully for userId: {}", userId);
     }

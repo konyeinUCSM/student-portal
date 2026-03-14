@@ -8,6 +8,9 @@ import com.manulife.studentportal.enums.Role;
 import com.manulife.studentportal.exception.DuplicateResourceException;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
 import com.manulife.studentportal.mapper.UserMapper;
+import com.manulife.studentportal.repository.LoginSessionRepository;
+import com.manulife.studentportal.repository.StudentRepository;
+import com.manulife.studentportal.repository.TeacherRepository;
 import com.manulife.studentportal.repository.UserRepository;
 import com.manulife.studentportal.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,9 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final TeacherRepository teacherRepository;
+    private final StudentRepository studentRepository;
+    private final LoginSessionRepository loginSessionRepository;
 
     @Override
     public UserResponse create(CreateUserRequest request) {
@@ -103,10 +109,32 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        // Soft delete (set deleted=true), also set active=false
+        // Soft delete user
         user.setDeleted(true);
         user.setActive(false);
-        userRepository.save(user);
+
+        // Cascade soft-delete to Teacher profile if exists
+        teacherRepository.findByUserId(id).ifPresent(teacher -> {
+            teacher.setDeleted(true);
+            log.info("Soft-deleted associated Teacher profile: teacherId={}", teacher.getId());
+        });
+
+        // Cascade soft-delete to Student profile if exists
+        studentRepository.findByUserId(id).ifPresent(student -> {
+            student.setDeleted(true);
+            log.info("Soft-deleted associated Student profile: studentId={}", student.getId());
+        });
+
+        // Terminate all active sessions for this user
+        loginSessionRepository.findAll((root, query, cb) ->
+            cb.and(
+                cb.equal(root.get("user").get("id"), id),
+                cb.equal(root.get("active"), true)
+            )
+        ).forEach(session -> {
+            session.setActive(false);
+            log.info("Terminated active session: sessionId={}, tokenId={}", session.getId(), session.getTokenId());
+        });
 
         log.info("User soft deleted successfully with id: {}", id);
     }

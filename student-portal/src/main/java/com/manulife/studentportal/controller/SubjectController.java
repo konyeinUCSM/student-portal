@@ -17,6 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.manulife.studentportal.security.AdminOnly;
+import com.manulife.studentportal.security.AdminOrTeacher;
+import static com.manulife.studentportal.security.SecurityExpressions.ADMIN_OR_ASSIGNED_TO_SUBJECT;
 
 import java.util.List;
 
@@ -29,7 +32,7 @@ public class SubjectController {
     private final SubjectService subjectService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Create subject", description = "Creates a new subject")
     public ResponseEntity<ApiResponse<SubjectResponse>> createSubject(
             @Valid @RequestBody CreateSubjectRequest request) {
@@ -40,7 +43,7 @@ public class SubjectController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @AdminOrTeacher
     @Operation(summary = "Get all subjects", description = "Retrieves a paginated list of subjects. ADMIN gets all, TEACHER gets only assigned subjects.")
     public ResponseEntity<ApiResponse<List<SubjectResponse>>> getAllSubjects(
             @Parameter(description = "Pagination parameters (page, size, sort)")
@@ -58,7 +61,7 @@ public class SubjectController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('TEACHER') and @securityService.isTeacherAssignedToSubject(#id))")
+    @PreAuthorize(ADMIN_OR_ASSIGNED_TO_SUBJECT)
     @Operation(summary = "Get subject by ID", description = "Retrieves a specific subject's details. ADMIN can view any, TEACHER can view only assigned subjects.")
     public ResponseEntity<ApiResponse<SubjectResponse>> getSubjectById(
             @Parameter(description = "Subject ID") @PathVariable Long id) {
@@ -68,7 +71,7 @@ public class SubjectController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Update subject", description = "Updates a subject's name")
     public ResponseEntity<ApiResponse<SubjectResponse>> updateSubject(
             @Parameter(description = "Subject ID") @PathVariable Long id,
@@ -79,7 +82,7 @@ public class SubjectController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Delete subject", description = "Soft deletes a subject")
     public ResponseEntity<ApiResponse<Void>> deleteSubject(
             @Parameter(description = "Subject ID") @PathVariable Long id) {

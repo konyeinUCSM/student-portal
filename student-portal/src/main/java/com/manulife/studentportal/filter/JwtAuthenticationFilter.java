@@ -33,28 +33,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String token = extractToken(request);
 
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-            String tokenId = jwtTokenProvider.getTokenId(token);
+        if (StringUtils.hasText(token)) {
+            try {
+                // Parse token once and extract all claims
+                var claims = jwtTokenProvider.parseToken(token);
+                String tokenId = claims.getId();
 
-            // Check session is still active in DB
-            boolean sessionActive = loginSessionRepository.existsByTokenIdAndActiveTrue(tokenId);
-            if (sessionActive) {
-                String username = jwtTokenProvider.getUsername(token);
-                Long userId = jwtTokenProvider.getUserId(token);
-                String role = jwtTokenProvider.getRole(token);
-                Long profileId = jwtTokenProvider.getProfileId(token);
+                // Check session is still active in DB
+                boolean sessionActive = loginSessionRepository.existsByTokenIdAndActiveTrue(tokenId);
+                if (sessionActive) {
+                    String username = claims.getSubject();
+                    Long userId = claims.get("userId", Long.class);
+                    String role = claims.get("role", String.class);
+                    Long profileId = claims.get("profileId", Long.class);
 
-                // Set userId in MDC for logging
-                MDC.put("userId", String.valueOf(userId));
+                    // Set userId in MDC for logging
+                    MDC.put("userId", String.valueOf(userId));
 
-                List<SimpleGrantedAuthority> authorities =
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                    List<SimpleGrantedAuthority> authorities =
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-                JwtAuthenticationToken authToken = new JwtAuthenticationToken(
-                        username, userId, role, profileId, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            } else {
-                log.warn("Session invalidated for tokenId: {}", tokenId);
+                    JwtAuthenticationToken authToken = new JwtAuthenticationToken(
+                            username, userId, role, profileId, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    log.warn("Session invalidated for tokenId: {}", tokenId);
+                }
+            } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ex) {
+                log.warn("JWT validation failed: {}", ex.getMessage());
             }
         }
 

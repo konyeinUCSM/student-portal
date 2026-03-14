@@ -236,7 +236,6 @@ public class ExamServiceImpl implements ExamService {
 
         // Soft delete
         exam.setDeleted(true);
-        examRepository.save(exam);
 
         log.info("Exam soft deleted successfully with id: {}", id);
     }

@@ -17,6 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.manulife.studentportal.security.AdminOnly;
+import com.manulife.studentportal.security.AdminOrTeacher;
+import static com.manulife.studentportal.security.SecurityExpressions.ADMIN_OR_OWNER_STUDENT;
 
 import java.util.List;
 
@@ -29,7 +32,7 @@ public class StudentController {
     private final StudentService studentService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Create student profile", description = "Creates a new student profile and links it to an existing user with STUDENT role")
     public ResponseEntity<ApiResponse<StudentResponse>> createStudent(
             @Valid @RequestBody CreateStudentRequest request) {
@@ -40,7 +43,7 @@ public class StudentController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @AdminOrTeacher
     @Operation(summary = "Get all students", description = "Retrieves a paginated list of students. ADMIN gets all, TEACHER gets only students in assigned classes.")
     public ResponseEntity<ApiResponse<List<StudentResponse>>> getAllStudents(
             @Parameter(description = "Pagination parameters (page, size, sort)")
@@ -58,7 +61,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER') or (hasRole('STUDENT') and @securityService.isStudentOwner(#id))")
+    @PreAuthorize(ADMIN_OR_OWNER_STUDENT)
     @Operation(summary = "Get student by ID", description = "Retrieves a specific student's details. ADMIN can view any, TEACHER can view students in assigned classes, STUDENT can view only their own profile.")
     public ResponseEntity<ApiResponse<StudentResponse>> getStudentById(
             @Parameter(description = "Student ID") @PathVariable Long id) {
@@ -68,7 +71,7 @@ public class StudentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Update student profile", description = "Updates student's name, phone, date of birth, and class. Roll number is not updatable.")
     public ResponseEntity<ApiResponse<StudentResponse>> updateStudent(
             @Parameter(description = "Student ID") @PathVariable Long id,
@@ -79,7 +82,7 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Delete student", description = "Soft deletes a student profile")
     public ResponseEntity<ApiResponse<Void>> deleteStudent(
             @Parameter(description = "Student ID") @PathVariable Long id) {

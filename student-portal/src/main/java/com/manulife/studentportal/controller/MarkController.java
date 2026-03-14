@@ -18,6 +18,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.manulife.studentportal.security.AdminOnly;
+import com.manulife.studentportal.security.AdminOrTeacher;
+import com.manulife.studentportal.security.AdminTeacherOrStudent;
+import com.manulife.studentportal.security.TeacherOnly;
 
 import java.util.List;
 
@@ -30,7 +34,7 @@ public class MarkController {
     private final MarkService markService;
 
     @PostMapping
-    @PreAuthorize("hasRole('TEACHER')")
+    @TeacherOnly
     @Operation(summary = "Create single mark", description = "Enters a mark for a student in an exam. TEACHER must be assigned to both the exam's class and subject.")
     public ResponseEntity<ApiResponse<MarkResponse>> createMark(
             @Valid @RequestBody CreateMarkRequest request) {
@@ -41,7 +45,7 @@ public class MarkController {
     }
 
     @PostMapping("/batch")
-    @PreAuthorize("hasRole('TEACHER')")
+    @TeacherOnly
     @Operation(summary = "Create batch marks", description = "Enters marks for multiple students in an exam. TEACHER must be assigned to both the exam's class and subject.")
     public ResponseEntity<ApiResponse<Void>> createBatchMarks(
             @Valid @RequestBody BatchMarkRequest request) {
@@ -52,7 +56,7 @@ public class MarkController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @AdminOrTeacher
     @Operation(summary = "Get all marks", description = "Retrieves a paginated list of marks. ADMIN gets all, TEACHER gets marks for assigned classes/subjects. Optional filters: examId, studentId.")
     public ResponseEntity<ApiResponse<List<MarkResponse>>> getAllMarks(
             @Parameter(description = "Pagination parameters (page, size, sort)")
@@ -74,7 +78,7 @@ public class MarkController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @AdminTeacherOrStudent
     @Operation(summary = "Get mark by ID", description = "Retrieves a specific mark. ADMIN can view any, TEACHER can view marks for assigned classes/subjects, STUDENT can view only their own marks.")
     public ResponseEntity<ApiResponse<MarkResponse>> getMarkById(
             @Parameter(description = "Mark ID") @PathVariable Long id) {
@@ -84,7 +88,7 @@ public class MarkController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('TEACHER')")
+    @TeacherOnly
     @Operation(summary = "Update mark", description = "Updates a mark's score and remarks. Grade is automatically recalculated. TEACHER must be assigned to the exam's class and subject.")
     public ResponseEntity<ApiResponse<MarkResponse>> updateMark(
             @Parameter(description = "Mark ID") @PathVariable Long id,
@@ -95,7 +99,7 @@ public class MarkController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @AdminOnly
     @Operation(summary = "Delete mark", description = "Soft deletes a mark. ADMIN only.")
     public ResponseEntity<ApiResponse<Void>> deleteMark(
             @Parameter(description = "Mark ID") @PathVariable Long id) {

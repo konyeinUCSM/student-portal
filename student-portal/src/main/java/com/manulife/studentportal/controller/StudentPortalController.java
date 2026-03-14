@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.manulife.studentportal.security.StudentOnly;
 
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class StudentPortalController {
     private final StudentPortalService studentPortalService;
 
     @GetMapping("/marks")
-    @PreAuthorize("hasRole('STUDENT')")
+    @StudentOnly
     @Operation(summary = "Get my marks", description = "Retrieves all marks for the logged-in student. Student ID is extracted from JWT, never from URL.")
     public ResponseEntity<ApiResponse<List<MarkResponse>>> getMyMarks(
             @Parameter(description = "Pagination parameters (page, size, sort)")
@@ -44,7 +45,7 @@ public class StudentPortalController {
     }
 
     @GetMapping("/marks/by-exam/{examId}")
-    @PreAuthorize("hasRole('STUDENT')")
+    @StudentOnly
     @Operation(summary = "Get marks by exam", description = "Retrieves marks for the logged-in student for a specific exam. Validates that the exam belongs to the student's class.")
     public ResponseEntity<ApiResponse<List<MarkResponse>>> getMarksByExam(
             @Parameter(description = "Exam ID") @PathVariable Long examId) {
@@ -54,7 +55,7 @@ public class StudentPortalController {
     }
 
     @GetMapping("/grades/summary")
-    @PreAuthorize("hasRole('STUDENT')")
+    @StudentOnly
     @Operation(summary = "Get grade summary", description = "Computes and returns the grade summary for the logged-in student, including subject-wise averages and overall grade.")
     public ResponseEntity<ApiResponse<GradeSummaryResponse>> getGradeSummary() {
 
