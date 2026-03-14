@@ -59,7 +59,7 @@ public class ExamServiceImpl implements ExamService {
                 .orElseThrow(() -> new ResourceNotFoundException("Subject not found with id: " + request.getSubjectId()));
 
         // If TEACHER: validate teacher is assigned to BOTH the class AND the subject
-        if ("TEACHER".equals(role)) {
+        if (securityService.isTeacher()) {
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
                     .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
@@ -105,19 +105,17 @@ public class ExamServiceImpl implements ExamService {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found with id: " + id));
 
-        String role = securityService.getCurrentRole();
-
-        if ("ADMIN".equals(role)) {
+        if (securityService.isAdmin()) {
             // ADMIN sees all
             return examMapper.toResponse(exam);
-        } else if ("TEACHER".equals(role)) {
+        } else if (securityService.isTeacher()) {
             // TEACHER must be assigned to exam's class
             Long teacherId = securityService.getCurrentProfileId();
             if (!teacherRepository.existsByIdAndClasses_Id(teacherId, exam.getSchoolClass().getId())) {
                 throw new AccessDeniedException("You can only view exams for classes you are assigned to");
             }
             return examMapper.toResponse(exam);
-        } else if ("STUDENT".equals(role)) {
+        } else if (securityService.isStudent()) {
             // STUDENT must be enrolled in exam's class
             Long studentId = securityService.getCurrentProfileId();
             Student student = studentRepository.findById(studentId)
@@ -137,13 +135,11 @@ public class ExamServiceImpl implements ExamService {
     public Page<ExamResponse> getAll(Pageable pageable) {
         log.debug("Fetching all exams with pagination: {}", pageable);
 
-        String role = securityService.getCurrentRole();
-
-        if ("ADMIN".equals(role)) {
+        if (securityService.isAdmin()) {
             // ADMIN gets all exams
             Page<Exam> exams = examRepository.findAll(pageable);
             return exams.map(examMapper::toResponse);
-        } else if ("TEACHER".equals(role)) {
+        } else if (securityService.isTeacher()) {
             // TEACHER gets exams for assigned classes
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
@@ -159,7 +155,7 @@ public class ExamServiceImpl implements ExamService {
 
             Page<Exam> exams = examRepository.findBySchoolClassIdIn(assignedClassIds, pageable);
             return exams.map(examMapper::toResponse);
-        } else if ("STUDENT".equals(role)) {
+        } else if (securityService.isStudent()) {
             // STUDENT gets exams for their class
             Long studentId = securityService.getCurrentProfileId();
             Student student = studentRepository.findById(studentId)

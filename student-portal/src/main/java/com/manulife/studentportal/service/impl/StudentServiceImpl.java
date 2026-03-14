@@ -92,12 +92,10 @@ public class StudentServiceImpl implements StudentService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
-        String role = securityService.getCurrentRole();
-
-        if ("ADMIN".equals(role)) {
+        if (securityService.isAdmin()) {
             // ADMIN can view any student
             return studentMapper.toResponse(student);
-        } else if ("TEACHER".equals(role)) {
+        } else if (securityService.isTeacher()) {
             // TEACHER can only view students in their assigned classes
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
@@ -112,7 +110,7 @@ public class StudentServiceImpl implements StudentService {
             }
 
             return studentMapper.toResponse(student);
-        } else if ("STUDENT".equals(role)) {
+        } else if (securityService.isStudent()) {
             // STUDENT can only view their own profile
             Long studentProfileId = securityService.getCurrentProfileId();
             if (!id.equals(studentProfileId)) {
@@ -130,13 +128,11 @@ public class StudentServiceImpl implements StudentService {
     public Page<StudentResponse> getAll(Pageable pageable) {
         log.debug("Fetching all students with pagination: {}", pageable);
 
-        String role = securityService.getCurrentRole();
-
-        if ("ADMIN".equals(role)) {
+        if (securityService.isAdmin()) {
             // ADMIN gets all students
             Page<Student> students = studentRepository.findAll(pageable);
             return students.map(studentMapper::toResponse);
-        } else if ("TEACHER".equals(role)) {
+        } else if (securityService.isTeacher()) {
             // TEACHER gets students in their assigned classes only
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)

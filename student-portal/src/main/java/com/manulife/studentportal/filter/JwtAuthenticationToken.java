@@ -9,14 +9,18 @@ import java.util.Collection;
 @Getter
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
+    private final String token;
+    private final String tokenId;
     private final String username;
     private final Long userId;
     private final String role;
     private final Long profileId;
 
-    public JwtAuthenticationToken(String username, Long userId, String role, Long profileId,
+    public JwtAuthenticationToken(String token, String tokenId, String username, Long userId, String role, Long profileId,
                                   Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
+        this.token = token;
+        this.tokenId = tokenId;
         this.username = username;
         this.userId = userId;
         this.role = role;

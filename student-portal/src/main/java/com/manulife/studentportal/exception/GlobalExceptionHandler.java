@@ -21,9 +21,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException ex) {
         log.warn("Business exception: {}", ex.getMessage());
-        if (ex.getMessage().contains("favicon.ico")) {
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity
                 .status(ex.getHttpStatus())
                 .body(ApiResponse.error(ex.getMessage()));

@@ -16,8 +16,10 @@ import com.manulife.studentportal.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,37 +96,24 @@ public class AuthServiceImpl implements AuthService {
                 .user(userSummary)
                 .build();
 
-        } catch (Exception e) {
+        } catch (BadCredentialsException | UsernameNotFoundException e) {
             log.warn("Failed login attempt for username: {}", loginRequest.getUsername());
             throw new UnauthorizedException("Invalid username or password");
+        } catch (Exception e) {
+            log.error("Unexpected error during login for username: {}", loginRequest.getUsername(), e);
+            throw new RuntimeException("An error occurred during login. Please try again later.", e);
         }
     }
 
     @Override
-    public void logout(String token) {
-        // Extract jti from token
-        String jti = jwtTokenProvider.getTokenId(token);
-
+    public void logout(String tokenId) {
         // Find LoginSession by tokenId and set active = false
-        LoginSession session = loginSessionRepository.findByTokenId(jti)
+        LoginSession session = loginSessionRepository.findByTokenId(tokenId)
             .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
 
         session.setActive(false);
 
-        log.info("Logout successful for session: {}", jti);
-    }
-
-    @Override
-    public LoginResponse.UserSummary getCurrentUser(String token) {
-        // Parse token once and extract all claims
-        var claims = jwtTokenProvider.parseToken(token);
-
-        return LoginResponse.UserSummary.builder()
-            .id(claims.get("userId", Long.class))
-            .username(claims.getSubject())
-            .role(claims.get("role", String.class))
-            .profileId(claims.get("profileId", Long.class))
-            .build();
+        log.info("Logout successful for session: {}", tokenId);
     }
 
     @Override

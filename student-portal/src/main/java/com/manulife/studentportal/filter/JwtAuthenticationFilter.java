@@ -54,7 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
                     JwtAuthenticationToken authToken = new JwtAuthenticationToken(
-                            username, userId, role, profileId, authorities);
+                            token, tokenId, username, userId, role, profileId, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
                     log.warn("Session invalidated for tokenId: {}", tokenId);

@@ -55,12 +55,9 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "Logout", description = "Invalidate current session")
-    public ResponseEntity<ApiResponse<Void>> logout(
-            @RequestHeader("Authorization") String authHeader) {
-
-        // Extract token from Bearer header
-        String token = authHeader.replace("Bearer ", "");
-        authService.logout(token);
+    public ResponseEntity<ApiResponse<Void>> logout() {
+        String tokenId = securityService.getCurrentTokenId();
+        authService.logout(tokenId);
 
         return ResponseEntity.ok(
             ApiResponse.<Void>builder()
@@ -72,11 +69,8 @@ public class AuthController {
 
     @GetMapping("/me")
     @Operation(summary = "Get current user", description = "Get current authenticated user information")
-    public ResponseEntity<ApiResponse<LoginResponse.UserSummary>> getCurrentUser(
-            @RequestHeader("Authorization") String authHeader) {
-
-        String token = authHeader.replace("Bearer ", "");
-        LoginResponse.UserSummary userSummary = authService.getCurrentUser(token);
+    public ResponseEntity<ApiResponse<LoginResponse.UserSummary>> getCurrentUser() {
+        LoginResponse.UserSummary userSummary = securityService.getCurrentUserSummary();
 
         return ResponseEntity.ok(
             ApiResponse.<LoginResponse.UserSummary>builder()

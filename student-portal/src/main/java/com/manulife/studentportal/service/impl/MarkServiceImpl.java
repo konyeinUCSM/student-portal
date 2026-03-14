@@ -61,8 +61,7 @@ public class MarkServiceImpl implements MarkService {
         }
 
         // If TEACHER: validate assigned to exam's class AND subject
-        String role = securityService.getCurrentRole();
-        if ("TEACHER".equals(role)) {
+        if (securityService.isTeacher()) {
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
                     .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
@@ -113,8 +112,7 @@ public class MarkServiceImpl implements MarkService {
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found with id: " + request.getExamId()));
 
         // If TEACHER: validate assigned to exam's class AND subject
-        String role = securityService.getCurrentRole();
-        if ("TEACHER".equals(role)) {
+        if (securityService.isTeacher()) {
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
                     .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
@@ -182,12 +180,10 @@ public class MarkServiceImpl implements MarkService {
         Mark mark = markRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mark not found with id: " + id));
 
-        String role = securityService.getCurrentRole();
-
-        if ("ADMIN".equals(role)) {
+        if (securityService.isAdmin()) {
             // ADMIN sees all
             return markMapper.toResponse(mark);
-        } else if ("TEACHER".equals(role)) {
+        } else if (securityService.isTeacher()) {
             // TEACHER must be assigned to mark's exam class and subject
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
@@ -206,7 +202,7 @@ public class MarkServiceImpl implements MarkService {
             }
 
             return markMapper.toResponse(mark);
-        } else if ("STUDENT".equals(role)) {
+        } else if (securityService.isStudent()) {
             // STUDENT must own the mark
             Long studentId = securityService.getCurrentProfileId();
             if (!mark.getStudent().getId().equals(studentId)) {

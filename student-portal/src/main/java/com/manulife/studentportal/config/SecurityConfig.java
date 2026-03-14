@@ -43,10 +43,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/v1/auth/login").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                    .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                    .requestMatchers("/api/v1/student-portal/**").hasRole("STUDENT")
                     .requestMatchers("/api/v1/**").authenticated()
-                    .anyRequest().permitAll())
+                    .anyRequest().denyAll())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .headers(headers -> headers
                     .contentTypeOptions(content -> {})

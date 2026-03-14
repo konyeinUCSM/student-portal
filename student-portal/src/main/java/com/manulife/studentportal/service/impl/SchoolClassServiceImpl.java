@@ -74,13 +74,11 @@ public class SchoolClassServiceImpl implements SchoolClassService {
     public Page<SchoolClassResponse> getAll(Pageable pageable) {
         log.debug("Fetching all classes with pagination: {}", pageable);
 
-        String role = securityService.getCurrentRole();
-
-        if ("ADMIN".equals(role)) {
+        if (securityService.isAdmin()) {
             // ADMIN gets all classes
             Page<SchoolClass> classes = schoolClassRepository.findAll(pageable);
             return classes.map(schoolClassMapper::toResponse);
-        } else if ("TEACHER".equals(role)) {
+        } else if (securityService.isTeacher()) {
             // TEACHER gets only assigned classes
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)

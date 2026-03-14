@@ -68,13 +68,11 @@ public class SubjectServiceImpl implements SubjectService {
     public Page<SubjectResponse> getAll(Pageable pageable) {
         log.debug("Fetching all subjects with pagination: {}", pageable);
 
-        String role = securityService.getCurrentRole();
-
-        if ("ADMIN".equals(role)) {
+        if (securityService.isAdmin()) {
             // ADMIN gets all subjects
             Page<Subject> subjects = subjectRepository.findAll(pageable);
             return subjects.map(subjectMapper::toResponse);
-        } else if ("TEACHER".equals(role)) {
+        } else if (securityService.isTeacher()) {
             // TEACHER gets only assigned subjects
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
