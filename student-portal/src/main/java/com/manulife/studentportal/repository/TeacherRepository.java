@@ -11,6 +11,8 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
     Optional<Teacher> findByUserId(Long userId);
 
+    boolean existsByStaffId(String staffId);
+
     boolean existsByIdAndClasses_Id(Long teacherId, Long classId);
 
     boolean existsByIdAndSubjects_Id(Long teacherId, Long subjectId);
