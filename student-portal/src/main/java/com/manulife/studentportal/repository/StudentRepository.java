@@ -1,6 +1,7 @@
 package com.manulife.studentportal.repository;
 
 import com.manulife.studentportal.entity.Student;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,10 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     Optional<Student> findByUserId(Long userId);
 
     List<Student> findBySchoolClassId(Long classId, Pageable pageable);
+
+    Page<Student> findBySchoolClassIdIn(List<Long> classIds, Pageable pageable);
+
+    boolean existsByRollNumber(String rollNumber);
+
+    boolean existsByUserId(Long userId);
 }
