@@ -4,15 +4,11 @@ import com.manulife.studentportal.dto.request.ChangePasswordRequest;
 import com.manulife.studentportal.dto.request.LoginRequest;
 import com.manulife.studentportal.dto.response.LoginResponse;
 import com.manulife.studentportal.entity.LoginSession;
-import com.manulife.studentportal.entity.Student;
-import com.manulife.studentportal.entity.Teacher;
 import com.manulife.studentportal.entity.User;
 import com.manulife.studentportal.exception.BusinessLogicException;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
 import com.manulife.studentportal.exception.UnauthorizedException;
 import com.manulife.studentportal.repository.LoginSessionRepository;
-import com.manulife.studentportal.repository.StudentRepository;
-import com.manulife.studentportal.repository.TeacherRepository;
 import com.manulife.studentportal.repository.UserRepository;
 import com.manulife.studentportal.security.CustomUserDetails;
 import com.manulife.studentportal.security.JwtTokenProvider;
@@ -39,8 +35,6 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final LoginSessionRepository loginSessionRepository;
-    private final TeacherRepository teacherRepository;
-    private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -58,20 +52,12 @@ public class AuthServiceImpl implements AuthService {
 
             // Get authenticated user details
             CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-            Long userId = customUserDetails.getUserId();
-            String role = customUserDetails.getRole();
+            User user = customUserDetails.getUser();
+            Long userId = user.getId();
+            String role = user.getRole().name();
+            Long profileId = customUserDetails.getProfileId();
 
             log.info("Login successful for userId: {}, role: {}", userId, role);
-
-            // Find profile ID if Teacher or Student
-            Long profileId = null;
-            if ("TEACHER".equals(role)) {
-                Teacher teacher = teacherRepository.findByUserId(userId).orElse(null);
-                profileId = teacher != null ? teacher.getId() : null;
-            } else if ("STUDENT".equals(role)) {
-                Student student = studentRepository.findByUserId(userId).orElse(null);
-                profileId = student != null ? student.getId() : null;
-            }
 
             // Generate JWT with jti
             String jti = UUID.randomUUID().toString();
@@ -86,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
             // Create LoginSession in DB
             LoginSession loginSession = new LoginSession();
             loginSession.setTokenId(jti);
-            loginSession.setUser(userRepository.findById(userId).orElseThrow());
+            loginSession.setUser(user);
             loginSession.setLoginTime(LocalDateTime.now());
             loginSession.setExpiryTime(LocalDateTime.now().plusSeconds(jwtTokenProvider.getExpirationInSeconds()));
             loginSession.setIpAddress(ipAddress);

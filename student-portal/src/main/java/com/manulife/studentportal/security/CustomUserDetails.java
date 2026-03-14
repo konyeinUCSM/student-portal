@@ -12,6 +12,7 @@ import java.util.List;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
+    private final User user;
     private final Long userId;
     private final String username;
     private final String password;
@@ -21,6 +22,7 @@ public class CustomUserDetails implements UserDetails {
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(User user, Long profileId) {
+        this.user = user;
         this.userId = user.getId();
         this.username = user.getUsername();
         this.password = user.getPassword();
