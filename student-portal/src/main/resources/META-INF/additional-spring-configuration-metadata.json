@@ -1,0 +1,27 @@
+{"properties": [
+  {
+    "name": "app.jwt.secret",
+    "type": "java.lang.String",
+    "description": "HS512 signing secret, minimum 64 characters"
+  },
+  {
+    "name": "app.jwt.expiration-ms",
+    "type": "java.lang.Long",
+    "description": "JWT expiration time in milliseconds"
+  },
+  {
+    "name": "app.cors.allowed-origins",
+    "type": "java.lang.String",
+    "description": "Comma-separated list of allowed CORS origins"
+  },
+  {
+    "name": "app.default-admin.username",
+    "type": "java.lang.String",
+    "description": "Default admin username for initial setup"
+  },
+  {
+    "name": "app.default-admin.password",
+    "type": "java.lang.String",
+    "description": "Default admin password for initial setup"
+  }
+]}

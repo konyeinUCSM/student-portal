@@ -1,9 +1,5 @@
 package com.manulife.studentportal.config;
 
-import com.manulife.studentportal.filter.JwtAuthenticationFilter;
-import com.manulife.studentportal.security.CustomAccessDeniedHandler;
-import com.manulife.studentportal.security.CustomAuthenticationEntryPoint;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,6 +14,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
+
+import com.manulife.studentportal.filter.JwtAuthenticationFilter;
+import com.manulife.studentportal.security.CustomAccessDeniedHandler;
+import com.manulife.studentportal.security.CustomAuthenticationEntryPoint;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -43,10 +45,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/v1/auth/login").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                    .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                    .requestMatchers("/api/v1/student-portal/**").hasRole("STUDENT")
                     .requestMatchers("/api/v1/**").authenticated()
-                    .anyRequest().permitAll())
+                    .anyRequest().denyAll())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .headers(headers -> headers
                     .contentTypeOptions(content -> {})

@@ -1,19 +1,24 @@
 package com.manulife.studentportal.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.manulife.studentportal.dto.request.ChangePasswordRequest;
 import com.manulife.studentportal.dto.request.LoginRequest;
 import com.manulife.studentportal.dto.response.ApiResponse;
 import com.manulife.studentportal.dto.response.LoginResponse;
 import com.manulife.studentportal.security.SecurityService;
 import com.manulife.studentportal.service.AuthService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -49,12 +54,9 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "Logout", description = "Invalidate current session")
-    public ResponseEntity<ApiResponse<Void>> logout(
-            @RequestHeader("Authorization") String authHeader) {
-
-        // Extract token from Bearer header
-        String token = authHeader.replace("Bearer ", "");
-        authService.logout(token);
+    public ResponseEntity<ApiResponse<Void>> logout() {
+        String tokenId = securityService.getCurrentTokenId();
+        authService.logout(tokenId);
 
         return ResponseEntity.ok(
             ApiResponse.<Void>builder()
@@ -66,11 +68,8 @@ public class AuthController {
 
     @GetMapping("/me")
     @Operation(summary = "Get current user", description = "Get current authenticated user information")
-    public ResponseEntity<ApiResponse<LoginResponse.UserSummary>> getCurrentUser(
-            @RequestHeader("Authorization") String authHeader) {
-
-        String token = authHeader.replace("Bearer ", "");
-        LoginResponse.UserSummary userSummary = authService.getCurrentUser(token);
+    public ResponseEntity<ApiResponse<LoginResponse.UserSummary>> getCurrentUser() {
+        LoginResponse.UserSummary userSummary = securityService.getCurrentUserSummary();
 
         return ResponseEntity.ok(
             ApiResponse.<LoginResponse.UserSummary>builder()

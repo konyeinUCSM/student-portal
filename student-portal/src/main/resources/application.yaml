@@ -1,24 +1,39 @@
 spring:
   application:
     name: student-portal
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/student_portal?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
+    hikari:
+      maximum-pool-size: 5
+
   jpa:
     open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-  mvc:
-    favicon:
-      enabled: false      
+        format-sql: true
 
 server:
   port: 8081
 
 app:
   jwt:
-    secret: ${JWT_SECRET:default-dev-secret-key-that-is-at-least-sixty-four-characters-long-for-hs512-algorithm}
-    expiration-ms: ${JWT_EXPIRATION:86400000}
+    secret: default-dev-secret-key-that-is-at-least-sixty-four-characters-long-for-hs512-algorithm
+    expiration-ms: 86400000
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+    allowed-origins: http://localhost:5173
   default-admin:
     username: admin
     password: admin123
+
+logging:
+  level:
+    "[com.manulife.studentportal]": DEBUG
+    "[org.hibernate.SQL]": DEBUG
+    "[org.hibernate.orm.jdbc.bind]": TRACE

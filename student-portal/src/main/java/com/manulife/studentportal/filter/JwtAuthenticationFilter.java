@@ -1,23 +1,24 @@
 package com.manulife.studentportal.filter;
 
-import com.manulife.studentportal.repository.LoginSessionRepository;
-import com.manulife.studentportal.security.JwtTokenProvider;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.List;
+
 import org.slf4j.MDC;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.List;
+import com.manulife.studentportal.repository.LoginSessionRepository;
+import com.manulife.studentportal.security.JwtTokenProvider;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -29,31 +30,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            FilterChain filterChain) throws ServletException, IOException {
         String token = extractToken(request);
 
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-            String tokenId = jwtTokenProvider.getTokenId(token);
+        if (StringUtils.hasText(token)) {
+            try {
+                // Parse token once and extract all claims
+                var claims = jwtTokenProvider.parseToken(token);
+                String tokenId = claims.getId();
 
-            // Check session is still active in DB
-            boolean sessionActive = loginSessionRepository.existsByTokenIdAndActiveTrue(tokenId);
-            if (sessionActive) {
-                String username = jwtTokenProvider.getUsername(token);
-                Long userId = jwtTokenProvider.getUserId(token);
-                String role = jwtTokenProvider.getRole(token);
-                Long profileId = jwtTokenProvider.getProfileId(token);
+                // Check session is still active in DB
+                boolean sessionActive = loginSessionRepository.existsByTokenIdAndActiveTrue(tokenId);
+                if (sessionActive) {
+                    String username = claims.getSubject();
+                    Long userId = claims.get("userId", Long.class);
+                    String role = claims.get("role", String.class);
+                    Long profileId = claims.get("profileId", Long.class);
 
-                // Set userId in MDC for logging
-                MDC.put("userId", String.valueOf(userId));
+                    // Set userId in MDC for logging
+                    MDC.put("userId", String.valueOf(userId));
 
-                List<SimpleGrantedAuthority> authorities =
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                    List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-                JwtAuthenticationToken authToken = new JwtAuthenticationToken(
-                        username, userId, role, profileId, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            } else {
-                log.warn("Session invalidated for tokenId: {}", tokenId);
+                    JwtAuthenticationToken authToken = new JwtAuthenticationToken(
+                            token, tokenId, username, userId, role, profileId, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    log.warn("Session invalidated for tokenId: {}", tokenId);
+                }
+            } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ex) {
+                log.warn("JWT validation failed: {}", ex.getMessage());
             }
         }
 

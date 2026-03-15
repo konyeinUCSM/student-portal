@@ -1,17 +1,20 @@
 package com.manulife.studentportal.security;
 
-import com.manulife.studentportal.entity.User;
-import lombok.Getter;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
+import com.manulife.studentportal.entity.User;
+
+import lombok.Getter;
 
 @Getter
 public class CustomUserDetails implements UserDetails {
 
+    private final User user;
     private final Long userId;
     private final String username;
     private final String password;
@@ -21,6 +24,7 @@ public class CustomUserDetails implements UserDetails {
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(User user, Long profileId) {
+        this.user = user;
         this.userId = user.getId();
         this.username = user.getUsername();
         this.password = user.getPassword();
