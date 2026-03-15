@@ -19,8 +19,10 @@ import com.manulife.studentportal.entity.User;
 import com.manulife.studentportal.enums.Role;
 import com.manulife.studentportal.exception.BusinessLogicException;
 import com.manulife.studentportal.exception.DuplicateResourceException;
+import com.manulife.studentportal.exception.InvalidOperationException;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
 import com.manulife.studentportal.mapper.StudentMapper;
+import com.manulife.studentportal.repository.MarkRepository;
 import com.manulife.studentportal.repository.SchoolClassRepository;
 import com.manulife.studentportal.repository.StudentRepository;
 import com.manulife.studentportal.repository.TeacherRepository;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
+    private final MarkRepository markRepository;
     private final UserRepository userRepository;
     private final SchoolClassRepository schoolClassRepository;
     private final TeacherRepository teacherRepository;
@@ -48,7 +51,6 @@ public class StudentServiceImpl implements StudentService {
     public StudentResponse create(CreateStudentRequest request) {
         log.info("Creating student profile for userId: {}", request.getUserId());
 
-        // Validate userId exists and has role STUDENT
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
 
@@ -56,21 +58,17 @@ public class StudentServiceImpl implements StudentService {
             throw new BusinessLogicException("User with id " + request.getUserId() + " does not have STUDENT role");
         }
 
-        // Validate rollNumber unique
-        if (studentRepository.existsByRollNumber(request.getRollNumber())) {
+        if (studentRepository.countByRollNumberAllRecords(request.getRollNumber()) > 0) {
             throw new DuplicateResourceException("Student with roll number " + request.getRollNumber() + " already exists");
         }
 
-        // Validate no existing student profile for this user
         if (studentRepository.existsByUserId(request.getUserId())) {
             throw new DuplicateResourceException("Student profile already exists for userId: " + request.getUserId());
         }
 
-        // Validate classId exists
         SchoolClass schoolClass = schoolClassRepository.findById(request.getClassId())
                 .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + request.getClassId()));
 
-        // Create student
         Student student = Student.builder()
                 .user(user)
                 .name(request.getName())
@@ -191,8 +189,12 @@ public class StudentServiceImpl implements StudentService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
-        // Soft delete
-        student.setDeleted(true);
+        if (markRepository.existsByStudentId(id)) {
+            throw new InvalidOperationException(
+                    "Cannot delete student with id " + id + ": academic mark records exist. Delete the marks first.");
+        }
+
+        student.softDelete(securityService.getCurrentUsername());
 
         log.info("Student soft deleted successfully with id: {}", id);
     }

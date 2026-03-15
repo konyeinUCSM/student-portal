@@ -28,7 +28,7 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (userRepository.existsByUsername(adminUsername)) {
+        if (userRepository.countByUsernameAllRecords(adminUsername) > 0) {
             log.info("Default admin user already exists, skipping");
             return;
         }

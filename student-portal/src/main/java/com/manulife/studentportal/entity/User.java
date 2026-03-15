@@ -27,7 +27,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends BaseEntity {
+public class User extends SoftDeletableEntity {
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;
@@ -42,7 +42,23 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 10)
     private Role role;
 
+    /**
+     * Two-flag lifecycle:
+     *   active=true,  deleted=false → normal, can log in
+     *   active=false, deleted=false → suspended, cannot log in (account still exists)
+     *   active=false, deleted=true  → permanently soft-deleted (invisible via @SQLRestriction)
+     */
     @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
+
+    /**
+     * Overrides softDelete to enforce the invariant that a deleted user
+     * is always deactivated. Prevents active=true, deleted=true state.
+     */
+    @Override
+    public void softDelete(String username) {
+        this.active = false;
+        super.softDelete(username);
+    }
 }

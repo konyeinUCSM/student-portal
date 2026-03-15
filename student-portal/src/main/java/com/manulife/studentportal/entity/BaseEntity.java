@@ -39,9 +39,6 @@ public abstract class BaseEntity {
     @Column(updatable = false)
     private String createdBy;
 
-    @Column(nullable = false)
-    private boolean deleted = false;
-
     @Version
     @Column(nullable = false)
     private Long version;

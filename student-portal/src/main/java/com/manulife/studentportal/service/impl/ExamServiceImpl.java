@@ -16,10 +16,13 @@ import com.manulife.studentportal.entity.SchoolClass;
 import com.manulife.studentportal.entity.Student;
 import com.manulife.studentportal.entity.Subject;
 import com.manulife.studentportal.entity.Teacher;
+import com.manulife.studentportal.exception.BusinessLogicException;
 import com.manulife.studentportal.exception.DuplicateResourceException;
+import com.manulife.studentportal.exception.InvalidOperationException;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
 import com.manulife.studentportal.mapper.ExamMapper;
 import com.manulife.studentportal.repository.ExamRepository;
+import com.manulife.studentportal.repository.MarkRepository;
 import com.manulife.studentportal.repository.SchoolClassRepository;
 import com.manulife.studentportal.repository.StudentRepository;
 import com.manulife.studentportal.repository.SubjectRepository;
@@ -40,6 +43,7 @@ public class ExamServiceImpl implements ExamService {
     private static final String TEACHER_NOT_FOUND = "Teacher not found with id: ";
 
     private final ExamRepository examRepository;
+    private final MarkRepository markRepository;
     private final SchoolClassRepository schoolClassRepository;
     private final SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
@@ -50,14 +54,13 @@ public class ExamServiceImpl implements ExamService {
     @Override
     public ExamResponse create(CreateExamRequest request) {
         log.info("Creating exam with name: {}", request.getName());
-        
-        // Validate class exists
+
         SchoolClass schoolClass = schoolClassRepository.findById(request.getClassId())
                 .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + request.getClassId()));
 
-        // Validate subject exists
         Subject subject = subjectRepository.findById(request.getSubjectId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subject not found with id: " + request.getSubjectId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Subject not found with id: " + request.getSubjectId()));
 
         // If TEACHER: validate teacher is assigned to BOTH the class AND the subject
         if (securityService.isTeacher()) {
@@ -71,8 +74,15 @@ public class ExamServiceImpl implements ExamService {
                     .anyMatch(s -> s.getId().equals(request.getSubjectId()));
 
             if (!assignedToClass || !assignedToSubject) {
-                throw new AccessDeniedException("You can only create exams for classes and subjects you are assigned to");
+                throw new AccessDeniedException(
+                        "You can only create exams for classes and subjects you are assigned to");
             }
+        }
+
+        if (request.getPassMarks() >= request.getFullMarks()) {
+            throw new BusinessLogicException(
+                    "Pass marks (" + request.getPassMarks() + ") must be less than full marks ("
+                            + request.getFullMarks() + ")");
         }
 
         // Check unique constraint (name + classId + subjectId)
@@ -82,7 +92,6 @@ public class ExamServiceImpl implements ExamService {
                     "Exam with name '" + request.getName() + "' already exists for this class and subject");
         }
 
-        // Create exam
         Exam exam = Exam.builder()
                 .name(request.getName())
                 .examDate(request.getExamDate())
@@ -137,11 +146,9 @@ public class ExamServiceImpl implements ExamService {
         log.debug("Fetching all exams with pagination: {}", pageable);
 
         if (securityService.isAdmin()) {
-            // ADMIN gets all exams
             Page<Exam> exams = examRepository.findAll(pageable);
             return exams.map(examMapper::toResponse);
         } else if (securityService.isTeacher()) {
-            // TEACHER gets exams for assigned classes
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
                     .orElseThrow(() -> new ResourceNotFoundException(TEACHER_NOT_FOUND + teacherId));
@@ -157,7 +164,6 @@ public class ExamServiceImpl implements ExamService {
             Page<Exam> exams = examRepository.findBySchoolClassIdIn(assignedClassIds, pageable);
             return exams.map(examMapper::toResponse);
         } else if (securityService.isStudent()) {
-            // STUDENT gets exams for their class
             Long studentId = securityService.getCurrentProfileId();
             Student student = studentRepository.findById(studentId)
                     .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
@@ -176,10 +182,9 @@ public class ExamServiceImpl implements ExamService {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(EXAM_NOT_FOUND + id));
 
-        String role = securityService.getCurrentRole();
-
-        // ADMIN can update any. TEACHER can only update exams they could create (assigned class + subject)
-        if ("TEACHER".equals(role)) {
+        // ADMIN can update any. TEACHER can only update exams they could create
+        // (assigned class + subject)
+        if (securityService.isTeacher()) {
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
                     .orElseThrow(() -> new ResourceNotFoundException(TEACHER_NOT_FOUND + teacherId));
@@ -193,16 +198,15 @@ public class ExamServiceImpl implements ExamService {
                     .anyMatch(s -> s.getId().equals(examSubjectId));
 
             if (!assignedToClass || !assignedToSubject) {
-                throw new AccessDeniedException("You can only update exams for classes and subjects you are assigned to");
+                throw new AccessDeniedException(
+                        "You can only update exams for classes and subjects you are assigned to");
             }
         }
 
-        // Update only non-null fields
         if (request.getName() != null) {
-            // Check unique constraint if name is being changed
             if (!exam.getName().equals(request.getName()) &&
-                examRepository.existsByNameAndSchoolClassIdAndSubjectId(
-                        request.getName(), exam.getSchoolClass().getId(), exam.getSubject().getId())) {
+                    examRepository.existsByNameAndSchoolClassIdAndSubjectId(
+                            request.getName(), exam.getSchoolClass().getId(), exam.getSubject().getId())) {
                 throw new DuplicateResourceException(
                         "Exam with name '" + request.getName() + "' already exists for this class and subject");
             }
@@ -218,6 +222,12 @@ public class ExamServiceImpl implements ExamService {
             exam.setPassMarks(request.getPassMarks());
         }
 
+        if (exam.getPassMarks() >= exam.getFullMarks()) {
+            throw new BusinessLogicException(
+                    "Pass marks (" + exam.getPassMarks() + ") must be less than full marks (" + exam.getFullMarks()
+                            + ")");
+        }
+
         exam = examRepository.save(exam);
         log.info("Exam updated successfully with id: {}", id);
 
@@ -231,8 +241,13 @@ public class ExamServiceImpl implements ExamService {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(EXAM_NOT_FOUND + id));
 
-        // Soft delete
-        exam.setDeleted(true);
+        if (markRepository.existsByExamId(id)) {
+            throw new InvalidOperationException(
+                    "Cannot delete exam with id " + id
+                            + ": student marks exist for this exam. Delete the marks first.");
+        }
+
+        exam.softDelete(securityService.getCurrentUsername());
 
         log.info("Exam soft deleted successfully with id: {}", id);
     }

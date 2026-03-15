@@ -92,11 +92,12 @@ public class LoginSessionServiceImpl implements LoginSessionService {
     }
 
     private LoginSessionResponse toResponse(LoginSession session) {
+        var user = session.getUser();
         return LoginSessionResponse.builder()
                 .id(session.getId())
-                .userId(session.getUser().getId())
-                .username(session.getUser().getUsername())
-                .role(session.getUser().getRole().name())
+                .userId(user != null ? user.getId() : null)
+                .username(user != null ? user.getUsername() : null)
+                .role(user != null ? user.getRole().name() : null)
                 .loginTime(session.getLoginTime())
                 .expiryTime(session.getExpiryTime())
                 .ipAddress(session.getIpAddress())

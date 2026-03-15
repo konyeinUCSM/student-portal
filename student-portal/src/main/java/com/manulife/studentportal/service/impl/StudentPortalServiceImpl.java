@@ -63,7 +63,6 @@ public class StudentPortalServiceImpl implements StudentPortalService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
-        // Validate exam exists
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found with id: " + examId));
 
@@ -72,7 +71,6 @@ public class StudentPortalServiceImpl implements StudentPortalService {
             throw new AccessDeniedException("You can only view exams for your class");
         }
 
-        // Get mark for this student and exam
         List<Mark> marks = markRepository.findByStudentIdAndExamId(studentId, examId)
                 .map(List::of)
                 .orElse(List.of());
@@ -86,24 +84,19 @@ public class StudentPortalServiceImpl implements StudentPortalService {
     public GradeSummaryResponse getGradeSummary() {
         log.debug("Calculating grade summary for current student");
 
-        // Get student ID from JWT
         Long studentId = securityService.getCurrentProfileId();
 
-        // 1. Get student
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
-        // 2. Get all marks for this student
         List<Mark> allMarks = markRepository.findByStudentId(studentId);
 
-        // 3. Group marks by subject
         Map<String, List<Mark>> marksBySubject = new HashMap<>();
         for (Mark mark : allMarks) {
             String subjectName = mark.getExam().getSubject().getName();
             marksBySubject.computeIfAbsent(subjectName, k -> new ArrayList<>()).add(mark);
         }
 
-        // 4. Calculate average for each subject
         List<SubjectGradeResponse> subjectGrades = new ArrayList<>();
         double totalPercentageSum = 0.0;
         int subjectCount = 0;
@@ -112,7 +105,6 @@ public class StudentPortalServiceImpl implements StudentPortalService {
             String subjectName = entry.getKey();
             List<Mark> subjectMarks = entry.getValue();
 
-            // Calculate average percentage for this subject
             double subjectPercentageSum = 0.0;
             for (Mark mark : subjectMarks) {
                 double percentage = GradeCalculator.calculatePercentage(mark.getScore(), mark.getExam().getFullMarks());
@@ -135,7 +127,6 @@ public class StudentPortalServiceImpl implements StudentPortalService {
             subjectCount++;
         }
 
-        // 6. Calculate overall percentage and grade
         double overallPercentage = 0.0;
         String overallGrade = "F";
 
@@ -145,7 +136,6 @@ public class StudentPortalServiceImpl implements StudentPortalService {
             overallGrade = GradeCalculator.gradeFromPercentage(overallPercentage);
         }
 
-        // 7. Build and return response
         return GradeSummaryResponse.builder()
                 .studentName(student.getName())
                 .className(student.getSchoolClass().getName())

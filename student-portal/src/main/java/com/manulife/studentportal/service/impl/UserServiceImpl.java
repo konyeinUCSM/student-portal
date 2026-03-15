@@ -12,12 +12,15 @@ import com.manulife.studentportal.dto.response.UserResponse;
 import com.manulife.studentportal.entity.User;
 import com.manulife.studentportal.enums.Role;
 import com.manulife.studentportal.exception.DuplicateResourceException;
+import com.manulife.studentportal.exception.InvalidOperationException;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
 import com.manulife.studentportal.mapper.UserMapper;
 import com.manulife.studentportal.repository.LoginSessionRepository;
+import com.manulife.studentportal.repository.MarkRepository;
 import com.manulife.studentportal.repository.StudentRepository;
 import com.manulife.studentportal.repository.TeacherRepository;
 import com.manulife.studentportal.repository.UserRepository;
+import com.manulife.studentportal.security.SecurityService;
 import com.manulife.studentportal.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,17 +37,18 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
+    private final MarkRepository markRepository;
     private final LoginSessionRepository loginSessionRepository;
+    private final SecurityService securityService;
 
     @Override
     public UserResponse create(CreateUserRequest request) {
-        // Validate username unique
-        if (userRepository.existsByUsername(request.getUsername())) {
+
+        if (userRepository.countByUsernameAllRecords(request.getUsername()) > 0) {
             throw new DuplicateResourceException("Username already exists: " + request.getUsername());
         }
 
-        // Validate email unique if provided
-        if (request.getEmail() != null && userRepository.existsByEmail(request.getEmail())) {
+        if (request.getEmail() != null && userRepository.countByEmailAllRecords(request.getEmail()) > 0) {
             throw new DuplicateResourceException("Email already exists: " + request.getEmail());
         }
 
@@ -87,10 +91,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        // Update only non-null fields
         if (request.getEmail() != null) {
-            // Check if email is already taken by another user
-            if (userRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+            if (userRepository.countByEmailExcludingIdAllRecords(request.getEmail(), id) > 0) {
                 throw new DuplicateResourceException("Email already exists: " + request.getEmail());
             }
             user.setEmail(request.getEmail());
@@ -111,19 +113,22 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        // Soft delete user
-        user.setDeleted(true);
-        user.setActive(false);
+        String deletedBy = securityService.getCurrentUsername();
 
-        // Cascade soft-delete to Teacher profile if exists
+        // softDelete() override in User enforces active=false atomically
+        user.softDelete(deletedBy);
+
         teacherRepository.findByUserId(id).ifPresent(teacher -> {
-            teacher.setDeleted(true);
+            teacher.softDelete(deletedBy);
             log.info("Soft-deleted associated Teacher profile: teacherId={}", teacher.getId());
         });
 
-        // Cascade soft-delete to Student profile if exists
         studentRepository.findByUserId(id).ifPresent(student -> {
-            student.setDeleted(true);
+            if (markRepository.existsByStudentId(student.getId())) {
+                throw new InvalidOperationException(
+                        "Cannot delete user id " + id + ": associated student has academic mark records. Delete the marks first.");
+            }
+            student.softDelete(deletedBy);
             log.info("Soft-deleted associated Student profile: studentId={}", student.getId());
         });
 

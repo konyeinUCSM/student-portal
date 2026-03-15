@@ -1,10 +1,8 @@
 package com.manulife.studentportal.service.impl;
 
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,14 +13,14 @@ import com.manulife.studentportal.dto.response.SchoolClassResponse;
 import com.manulife.studentportal.dto.response.StudentResponse;
 import com.manulife.studentportal.entity.SchoolClass;
 import com.manulife.studentportal.entity.Student;
-import com.manulife.studentportal.entity.Teacher;
 import com.manulife.studentportal.exception.DuplicateResourceException;
+import com.manulife.studentportal.exception.InvalidOperationException;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
 import com.manulife.studentportal.mapper.SchoolClassMapper;
 import com.manulife.studentportal.mapper.StudentMapper;
+import com.manulife.studentportal.repository.ExamRepository;
 import com.manulife.studentportal.repository.SchoolClassRepository;
 import com.manulife.studentportal.repository.StudentRepository;
-import com.manulife.studentportal.repository.TeacherRepository;
 import com.manulife.studentportal.security.SecurityService;
 import com.manulife.studentportal.service.SchoolClassService;
 
@@ -35,11 +33,11 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class SchoolClassServiceImpl implements SchoolClassService {
 
-    private static final String CLASS_NOT_FOUND = CLASS_NOT_FOUND;
+    private static final String CLASS_NOT_FOUND = "Class not found with id: ";
 
     private final SchoolClassRepository schoolClassRepository;
     private final StudentRepository studentRepository;
-    private final TeacherRepository teacherRepository;
+    private final ExamRepository examRepository;
     private final SchoolClassMapper schoolClassMapper;
     private final StudentMapper studentMapper;
     private final SecurityService securityService;
@@ -82,22 +80,10 @@ public class SchoolClassServiceImpl implements SchoolClassService {
             Page<SchoolClass> classes = schoolClassRepository.findAll(pageable);
             return classes.map(schoolClassMapper::toResponse);
         } else if (securityService.isTeacher()) {
-            // TEACHER gets only assigned classes
+            // TEACHER gets only assigned classes — paginated at DB level
             Long teacherId = securityService.getCurrentProfileId();
-            Teacher teacher = teacherRepository.findById(teacherId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
-
-            Set<SchoolClass> assignedClasses = teacher.getClasses();
-            List<SchoolClassResponse> classResponses = assignedClasses.stream()
-                    .map(schoolClassMapper::toResponse)
-                    .toList();
-
-            // Create a page from the list (simple pagination)
-            int start = (int) pageable.getOffset();
-            int end = Math.min((start + pageable.getPageSize()), classResponses.size());
-            List<SchoolClassResponse> pageContent = classResponses.subList(start, end);
-
-            return new PageImpl<>(pageContent, pageable, classResponses.size());
+            return schoolClassRepository.findByTeacherId(teacherId, pageable)
+                    .map(schoolClassMapper::toResponse);
         }
 
         return Page.empty(pageable);
@@ -130,7 +116,17 @@ public class SchoolClassServiceImpl implements SchoolClassService {
         SchoolClass schoolClass = schoolClassRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(CLASS_NOT_FOUND + id));
 
-        schoolClass.setDeleted(true);
+        if (studentRepository.existsBySchoolClassId(id)) {
+            throw new InvalidOperationException(
+                    "Cannot delete class with id " + id + ": it still has active students enrolled. Reassign or remove students first.");
+        }
+
+        if (examRepository.existsBySchoolClassId(id)) {
+            throw new InvalidOperationException(
+                    "Cannot delete class with id " + id + ": it still has active exams. Delete the exams first.");
+        }
+
+        schoolClass.softDelete(securityService.getCurrentUsername());
 
         log.info("Class soft deleted successfully with id: {}", id);
     }

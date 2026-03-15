@@ -16,8 +16,10 @@ import com.manulife.studentportal.dto.response.SubjectResponse;
 import com.manulife.studentportal.entity.Subject;
 import com.manulife.studentportal.entity.Teacher;
 import com.manulife.studentportal.exception.DuplicateResourceException;
+import com.manulife.studentportal.exception.InvalidOperationException;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
 import com.manulife.studentportal.mapper.SubjectMapper;
+import com.manulife.studentportal.repository.ExamRepository;
 import com.manulife.studentportal.repository.SubjectRepository;
 import com.manulife.studentportal.repository.TeacherRepository;
 import com.manulife.studentportal.security.SecurityService;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SubjectServiceImpl implements SubjectService {
 
     private final SubjectRepository subjectRepository;
+    private final ExamRepository examRepository;
     private final TeacherRepository teacherRepository;
     private final SubjectMapper subjectMapper;
     private final SecurityService securityService;
@@ -41,7 +44,6 @@ public class SubjectServiceImpl implements SubjectService {
     public SubjectResponse create(CreateSubjectRequest request) {
         log.info("Creating subject with name: {}", request.getName());
 
-        // Validate name uniqueness
         if (subjectRepository.existsByName(request.getName())) {
             throw new DuplicateResourceException("Subject with name " + request.getName() + " already exists");
         }
@@ -85,7 +87,6 @@ public class SubjectServiceImpl implements SubjectService {
                     .map(subjectMapper::toResponse)
                     .collect(Collectors.toList());
 
-            // Create a page from the list (simple pagination)
             int start = (int) pageable.getOffset();
             int end = Math.min((start + pageable.getPageSize()), subjectResponses.size());
             List<SubjectResponse> pageContent = subjectResponses.subList(start, end);
@@ -123,7 +124,12 @@ public class SubjectServiceImpl implements SubjectService {
         Subject subject = subjectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Subject not found with id: " + id));
 
-        subject.setDeleted(true);
+        if (examRepository.existsBySubjectId(id)) {
+            throw new InvalidOperationException(
+                    "Cannot delete subject with id " + id + ": it is still used in active exams. Delete the exams first.");
+        }
+
+        subject.softDelete(securityService.getCurrentUsername());
 
         log.info("Subject soft deleted successfully with id: {}", id);
     }

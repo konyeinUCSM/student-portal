@@ -21,7 +21,15 @@ public interface MarkRepository extends JpaRepository<Mark, Long> {
 
     boolean existsByStudentIdAndExamId(Long studentId, Long examId);
 
+    boolean existsByStudentId(Long studentId);
+
+    boolean existsByExamId(Long examId);
+
     Page<Mark> findByExamIdIn(List<Long> examIds, Pageable pageable);
 
     List<Mark> findByStudentId(Long studentId);
+
+    List<Mark> findByExamId(Long examId);
+
+    Page<Mark> findByStudentIdAndExamIdIn(Long studentId, List<Long> examIds, Pageable pageable);
 }

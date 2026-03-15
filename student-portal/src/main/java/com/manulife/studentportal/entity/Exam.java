@@ -31,7 +31,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Exam extends BaseEntity {
+public class Exam extends SoftDeletableEntity {
 
         @Column(nullable = false, length = 100)
         private String name;

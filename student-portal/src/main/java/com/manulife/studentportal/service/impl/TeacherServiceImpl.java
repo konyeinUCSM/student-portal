@@ -32,6 +32,7 @@ import com.manulife.studentportal.repository.SchoolClassRepository;
 import com.manulife.studentportal.repository.SubjectRepository;
 import com.manulife.studentportal.repository.TeacherRepository;
 import com.manulife.studentportal.repository.UserRepository;
+import com.manulife.studentportal.security.SecurityService;
 import com.manulife.studentportal.service.TeacherService;
 
 import lombok.RequiredArgsConstructor;
@@ -50,12 +51,12 @@ public class TeacherServiceImpl implements TeacherService {
     private final TeacherMapper teacherMapper;
     private final SchoolClassMapper schoolClassMapper;
     private final SubjectMapper subjectMapper;
+    private final SecurityService securityService;
 
     @Override
     public TeacherResponse create(CreateTeacherRequest request) {
         log.info("Creating teacher profile for userId: {}", request.getUserId());
 
-        // Validate userId exists and has role TEACHER
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
 
@@ -63,17 +64,14 @@ public class TeacherServiceImpl implements TeacherService {
             throw new BusinessLogicException("User with id " + request.getUserId() + " does not have TEACHER role");
         }
 
-        // Validate staffId unique
-        if (teacherRepository.existsByStaffId(request.getStaffId())) {
+        if (teacherRepository.countByStaffIdAllRecords(request.getStaffId()) > 0) {
             throw new DuplicateResourceException("Teacher with staffId " + request.getStaffId() + " already exists");
         }
 
-        // Validate no existing teacher profile for this user
         if (teacherRepository.findByUserId(request.getUserId()).isPresent()) {
             throw new DuplicateResourceException("Teacher profile already exists for userId: " + request.getUserId());
         }
 
-        // Create teacher
         Teacher teacher = Teacher.builder()
                 .user(user)
                 .name(request.getName())
@@ -113,7 +111,6 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + id));
 
-        // Update only non-null fields
         if (request.getName() != null) {
             teacher.setName(request.getName());
         }
@@ -134,8 +131,7 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + id));
 
-        // Soft delete
-        teacher.setDeleted(true);
+        teacher.softDelete(securityService.getCurrentUsername());
 
         log.info("Teacher soft deleted successfully with id: {}", id);
     }
@@ -147,10 +143,8 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + id));
 
-        // Find all classes by IDs
         List<SchoolClass> classes = schoolClassRepository.findAllById(request.getClassIds());
 
-        // Validate all class IDs exist
         if (classes.size() != request.getClassIds().size()) {
             Set<Long> foundIds = classes.stream().map(SchoolClass::getId).collect(Collectors.toSet());
             Set<Long> notFoundIds = request.getClassIds().stream()
@@ -159,7 +153,6 @@ public class TeacherServiceImpl implements TeacherService {
             throw new ResourceNotFoundException("Classes not found with ids: " + notFoundIds);
         }
 
-        // Replace teacher.classes set entirely
         teacher.setClasses(new HashSet<>(classes));
         teacherRepository.save(teacher);
 
@@ -173,10 +166,8 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + id));
 
-        // Find all subjects by IDs
         List<Subject> subjects = subjectRepository.findAllById(request.getSubjectIds());
 
-        // Validate all subject IDs exist
         if (subjects.size() != request.getSubjectIds().size()) {
             Set<Long> foundIds = subjects.stream().map(Subject::getId).collect(Collectors.toSet());
             Set<Long> notFoundIds = request.getSubjectIds().stream()
@@ -185,7 +176,6 @@ public class TeacherServiceImpl implements TeacherService {
             throw new ResourceNotFoundException("Subjects not found with ids: " + notFoundIds);
         }
 
-        // Replace teacher.subjects set entirely
         teacher.setSubjects(new HashSet<>(subjects));
         teacherRepository.save(teacher);
 

@@ -21,7 +21,7 @@ import lombok.Setter;
                 @Index(name = "idx_mark_student_id", columnList = "student_id"),
                 @Index(name = "idx_mark_exam_id", columnList = "exam_id")
 }, uniqueConstraints = {
-                @UniqueConstraint(name = "uk_mark_student_exam", columnNames = { "student_id", "exam_id" })
+                @UniqueConstraint(name = "uk_mark_student_exam", columnNames = { "student_id", "exam_id", "deleted_id" })
 })
 @SQLRestriction("deleted = false")
 @Getter
@@ -29,7 +29,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Mark extends BaseEntity {
+public class Mark extends SoftDeletableEntity {
 
         @Column(nullable = false)
         private Double score;
@@ -40,6 +40,15 @@ public class Mark extends BaseEntity {
         @Column(length = 255)
         private String remarks;
 
+        /**
+         * Soft-delete uniqueness sentinel for MySQL.
+         * active = 0 (all active marks share this value, constraint blocks duplicates)
+         * deleted = getId() (each deleted mark has a unique value, constraint allows coexistence)
+         */
+        @Builder.Default
+        @Column(name = "deleted_id", nullable = false)
+        private Long deletedId = 0L;
+
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "student_id", nullable = false)
         private Student student;
@@ -47,4 +56,10 @@ public class Mark extends BaseEntity {
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "exam_id", nullable = false)
         private Exam exam;
+
+        @Override
+        public void softDelete(String username) {
+                this.deletedId = this.getId();
+                super.softDelete(username);
+        }
 }
