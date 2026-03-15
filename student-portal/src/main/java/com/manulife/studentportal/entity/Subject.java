@@ -1,8 +1,15 @@
 package com.manulife.studentportal.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "subjects")
@@ -12,7 +19,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Subject extends BaseEntity {
+public class Subject extends SoftDeletableEntity {
 
     @Column(nullable = false, unique = true, length = 50)
     private String name;

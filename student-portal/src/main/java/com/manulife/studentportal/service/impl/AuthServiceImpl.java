@@ -1,33 +1,33 @@
 package com.manulife.studentportal.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.manulife.studentportal.dto.request.ChangePasswordRequest;
 import com.manulife.studentportal.dto.request.LoginRequest;
 import com.manulife.studentportal.dto.response.LoginResponse;
 import com.manulife.studentportal.entity.LoginSession;
-import com.manulife.studentportal.entity.Student;
-import com.manulife.studentportal.entity.Teacher;
 import com.manulife.studentportal.entity.User;
 import com.manulife.studentportal.exception.BusinessLogicException;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
 import com.manulife.studentportal.exception.UnauthorizedException;
 import com.manulife.studentportal.repository.LoginSessionRepository;
-import com.manulife.studentportal.repository.StudentRepository;
-import com.manulife.studentportal.repository.TeacherRepository;
 import com.manulife.studentportal.repository.UserRepository;
 import com.manulife.studentportal.security.CustomUserDetails;
 import com.manulife.studentportal.security.JwtTokenProvider;
 import com.manulife.studentportal.service.AuthService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,8 +39,6 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final LoginSessionRepository loginSessionRepository;
-    private final TeacherRepository teacherRepository;
-    private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -58,20 +56,12 @@ public class AuthServiceImpl implements AuthService {
 
             // Get authenticated user details
             CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-            Long userId = customUserDetails.getUserId();
-            String role = customUserDetails.getRole();
+            User user = customUserDetails.getUser();
+            Long userId = user.getId();
+            String role = user.getRole().name();
+            Long profileId = customUserDetails.getProfileId();
 
             log.info("Login successful for userId: {}, role: {}", userId, role);
-
-            // Find profile ID if Teacher or Student
-            Long profileId = null;
-            if ("TEACHER".equals(role)) {
-                Teacher teacher = teacherRepository.findByUserId(userId).orElse(null);
-                profileId = teacher != null ? teacher.getId() : null;
-            } else if ("STUDENT".equals(role)) {
-                Student student = studentRepository.findByUserId(userId).orElse(null);
-                profileId = student != null ? student.getId() : null;
-            }
 
             // Generate JWT with jti
             String jti = UUID.randomUUID().toString();
@@ -86,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
             // Create LoginSession in DB
             LoginSession loginSession = new LoginSession();
             loginSession.setTokenId(jti);
-            loginSession.setUser(userRepository.findById(userId).orElseThrow());
+            loginSession.setUser(user);
             loginSession.setLoginTime(LocalDateTime.now());
             loginSession.setExpiryTime(LocalDateTime.now().plusSeconds(jwtTokenProvider.getExpirationInSeconds()));
             loginSession.setIpAddress(ipAddress);
@@ -108,41 +98,24 @@ public class AuthServiceImpl implements AuthService {
                 .user(userSummary)
                 .build();
 
-        } catch (Exception e) {
+        } catch (BadCredentialsException | UsernameNotFoundException e) {
             log.warn("Failed login attempt for username: {}", loginRequest.getUsername());
             throw new UnauthorizedException("Invalid username or password");
+        } catch (Exception e) {
+            log.error("Unexpected error during login for username: {}", loginRequest.getUsername(), e);
+            throw new RuntimeException("An error occurred during login. Please try again later.", e);
         }
     }
 
     @Override
-    public void logout(String token) {
-        // Extract jti from token
-        String jti = jwtTokenProvider.getJtiFromToken(token);
-
+    public void logout(String tokenId) {
         // Find LoginSession by tokenId and set active = false
-        LoginSession session = loginSessionRepository.findByTokenId(jti)
+        LoginSession session = loginSessionRepository.findByTokenId(tokenId)
             .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
 
         session.setActive(false);
-        loginSessionRepository.save(session);
 
-        log.info("Logout successful for session: {}", jti);
-    }
-
-    @Override
-    public LoginResponse.UserSummary getCurrentUser(String token) {
-        // Extract userId from token
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        String role = jwtTokenProvider.getRoleFromToken(token);
-        Long profileId = jwtTokenProvider.getProfileIdFromToken(token);
-
-        return LoginResponse.UserSummary.builder()
-            .id(userId)
-            .username(username)
-            .role(role)
-            .profileId(profileId)
-            .build();
+        log.info("Logout successful for session: {}", tokenId);
     }
 
     @Override
@@ -155,9 +128,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessLogicException("Old password is incorrect");
         }
 
-        // Encode and save new password
+        // Encode and set new password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
 
         log.info("Password changed successfully for userId: {}", userId);
     }

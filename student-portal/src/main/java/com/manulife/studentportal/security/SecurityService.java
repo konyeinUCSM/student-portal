@@ -1,11 +1,14 @@
 package com.manulife.studentportal.security;
 
-import com.manulife.studentportal.filter.JwtAuthenticationToken;
-import com.manulife.studentportal.repository.TeacherRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import com.manulife.studentportal.dto.response.LoginResponse;
+import com.manulife.studentportal.filter.JwtAuthenticationToken;
+import com.manulife.studentportal.repository.TeacherRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service("securityService")
 @RequiredArgsConstructor
@@ -21,6 +24,18 @@ public class SecurityService {
         throw new IllegalStateException("No JWT authentication found in SecurityContext");
     }
 
+    public String getCurrentToken() {
+        return getCurrentAuth().getToken();
+    }
+
+    public String getCurrentTokenId() {
+        return getCurrentAuth().getTokenId();
+    }
+
+    public String getCurrentUsername() {
+        return getCurrentAuth().getUsername();
+    }
+
     public Long getCurrentUserId() {
         return getCurrentAuth().getUserId();
     }
@@ -33,8 +48,26 @@ public class SecurityService {
         return getCurrentAuth().getProfileId();
     }
 
+    public LoginResponse.UserSummary getCurrentUserSummary() {
+        JwtAuthenticationToken auth = getCurrentAuth();
+        return LoginResponse.UserSummary.builder()
+                .id(auth.getUserId())
+                .username(auth.getUsername())
+                .role(auth.getRole())
+                .profileId(auth.getProfileId())
+                .build();
+    }
+
     public boolean isAdmin() {
         return "ADMIN".equals(getCurrentRole());
+    }
+
+    public boolean isTeacher() {
+        return "TEACHER".equals(getCurrentRole());
+    }
+
+    public boolean isStudent() {
+        return "STUDENT".equals(getCurrentRole());
     }
 
     public boolean isTeacherOwner(Long teacherId) {

@@ -8,9 +8,7 @@ public interface AuthService {
 
     LoginResponse login(LoginRequest loginRequest, String ipAddress);
 
-    void logout(String token);
-
-    LoginResponse.UserSummary getCurrentUser(String token);
+    void logout(String tokenId);
 
     void changePassword(ChangePasswordRequest request, Long userId);
 }

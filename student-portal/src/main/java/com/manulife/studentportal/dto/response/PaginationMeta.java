@@ -1,10 +1,11 @@
 package com.manulife.studentportal.dto.response;
 
+import org.springframework.data.domain.Page;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.domain.Page;
 
 @Data
 @Builder

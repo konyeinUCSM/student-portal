@@ -1,10 +1,22 @@
 package com.manulife.studentportal.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import java.time.LocalDate;
+
 import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDate;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "students", indexes = {
@@ -17,7 +29,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Student extends BaseEntity {
+public class Student extends SoftDeletableEntity {
 
     @Column(nullable = false, length = 100)
     private String name;
