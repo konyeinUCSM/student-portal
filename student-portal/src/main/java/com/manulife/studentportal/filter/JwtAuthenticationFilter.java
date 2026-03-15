@@ -30,7 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            FilterChain filterChain) throws ServletException, IOException {
         String token = extractToken(request);
 
         if (StringUtils.hasText(token)) {
@@ -50,8 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // Set userId in MDC for logging
                     MDC.put("userId", String.valueOf(userId));
 
-                    List<SimpleGrantedAuthority> authorities =
-                            List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                    List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
                     JwtAuthenticationToken authToken = new JwtAuthenticationToken(
                             token, tokenId, username, userId, role, profileId, authorities);

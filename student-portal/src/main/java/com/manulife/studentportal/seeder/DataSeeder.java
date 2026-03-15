@@ -1,14 +1,16 @@
 package com.manulife.studentportal.seeder;
 
-import com.manulife.studentportal.entity.User;
-import com.manulife.studentportal.enums.Role;
-import com.manulife.studentportal.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import com.manulife.studentportal.entity.User;
+import com.manulife.studentportal.enums.Role;
+import com.manulife.studentportal.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component

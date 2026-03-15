@@ -1,10 +1,11 @@
 package com.manulife.studentportal.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.manulife.studentportal.dto.request.CreateExamRequest;
 import com.manulife.studentportal.dto.request.UpdateExamRequest;
 import com.manulife.studentportal.dto.response.ExamResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface ExamService {
 

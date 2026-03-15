@@ -1,5 +1,14 @@
 package com.manulife.studentportal.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.manulife.studentportal.dto.request.CreateExamRequest;
 import com.manulife.studentportal.dto.request.UpdateExamRequest;
 import com.manulife.studentportal.dto.response.ExamResponse;
@@ -8,7 +17,6 @@ import com.manulife.studentportal.entity.SchoolClass;
 import com.manulife.studentportal.entity.Student;
 import com.manulife.studentportal.entity.Subject;
 import com.manulife.studentportal.entity.Teacher;
-import com.manulife.studentportal.exception.BusinessLogicException;
 import com.manulife.studentportal.exception.DuplicateResourceException;
 import com.manulife.studentportal.exception.ResourceNotFoundException;
 import com.manulife.studentportal.mapper.ExamMapper;
@@ -19,16 +27,9 @@ import com.manulife.studentportal.repository.SubjectRepository;
 import com.manulife.studentportal.repository.TeacherRepository;
 import com.manulife.studentportal.security.SecurityService;
 import com.manulife.studentportal.service.ExamService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

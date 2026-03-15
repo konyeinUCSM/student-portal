@@ -1,12 +1,14 @@
 package com.manulife.studentportal.security;
 
-import com.manulife.studentportal.dto.response.LoginResponse;
-import com.manulife.studentportal.filter.JwtAuthenticationToken;
-import com.manulife.studentportal.repository.TeacherRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import com.manulife.studentportal.dto.response.LoginResponse;
+import com.manulife.studentportal.filter.JwtAuthenticationToken;
+import com.manulife.studentportal.repository.TeacherRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service("securityService")
 @RequiredArgsConstructor

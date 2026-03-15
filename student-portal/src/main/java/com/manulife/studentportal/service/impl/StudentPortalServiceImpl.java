@@ -1,5 +1,17 @@
 package com.manulife.studentportal.service.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.manulife.studentportal.dto.response.GradeSummaryResponse;
 import com.manulife.studentportal.dto.response.MarkResponse;
 import com.manulife.studentportal.dto.response.SubjectGradeResponse;
@@ -14,20 +26,9 @@ import com.manulife.studentportal.repository.StudentRepository;
 import com.manulife.studentportal.security.SecurityService;
 import com.manulife.studentportal.service.StudentPortalService;
 import com.manulife.studentportal.util.GradeCalculator;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

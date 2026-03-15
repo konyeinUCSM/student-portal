@@ -1,6 +1,7 @@
 package com.manulife.studentportal.dto.request;
 
 import com.manulife.studentportal.enums.Role;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

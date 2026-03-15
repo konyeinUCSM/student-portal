@@ -1,10 +1,11 @@
 package com.manulife.studentportal.mapper;
 
-import com.manulife.studentportal.dto.response.SubjectResponse;
-import com.manulife.studentportal.entity.Subject;
+import java.util.List;
+
 import org.mapstruct.Mapper;
 
-import java.util.List;
+import com.manulife.studentportal.dto.response.SubjectResponse;
+import com.manulife.studentportal.entity.Subject;
 
 @Mapper(componentModel = "spring")
 public interface SubjectMapper {

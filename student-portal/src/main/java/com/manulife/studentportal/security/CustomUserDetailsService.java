@@ -1,15 +1,17 @@
 package com.manulife.studentportal.security;
 
-import com.manulife.studentportal.entity.User;
-import com.manulife.studentportal.enums.Role;
-import com.manulife.studentportal.repository.TeacherRepository;
-import com.manulife.studentportal.repository.StudentRepository;
-import com.manulife.studentportal.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import com.manulife.studentportal.entity.User;
+import com.manulife.studentportal.enums.Role;
+import com.manulife.studentportal.repository.StudentRepository;
+import com.manulife.studentportal.repository.TeacherRepository;
+import com.manulife.studentportal.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

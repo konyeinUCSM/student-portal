@@ -1,5 +1,11 @@
 package com.manulife.studentportal.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.manulife.studentportal.dto.request.CreateUserRequest;
 import com.manulife.studentportal.dto.request.UpdateUserRequest;
 import com.manulife.studentportal.dto.response.UserResponse;
@@ -13,13 +19,9 @@ import com.manulife.studentportal.repository.StudentRepository;
 import com.manulife.studentportal.repository.TeacherRepository;
 import com.manulife.studentportal.repository.UserRepository;
 import com.manulife.studentportal.service.UserService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service

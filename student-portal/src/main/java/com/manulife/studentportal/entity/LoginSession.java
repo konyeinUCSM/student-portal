@@ -30,7 +30,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginSession extends BaseEntity{
+public class LoginSession extends BaseEntity {
 
     @Column(nullable = false, unique = true)
     private String tokenId;

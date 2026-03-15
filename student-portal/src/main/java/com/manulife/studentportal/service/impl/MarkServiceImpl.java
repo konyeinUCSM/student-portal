@@ -1,29 +1,38 @@
 package com.manulife.studentportal.service.impl;
 
-import com.manulife.studentportal.dto.request.BatchMarkRequest;
-import com.manulife.studentportal.dto.request.CreateMarkRequest;
-import com.manulife.studentportal.dto.request.UpdateMarkRequest;
-import com.manulife.studentportal.dto.response.MarkResponse;
-import com.manulife.studentportal.entity.*;
-import com.manulife.studentportal.exception.BusinessLogicException;
-import com.manulife.studentportal.exception.DuplicateResourceException;
-import com.manulife.studentportal.exception.ResourceNotFoundException;
-import com.manulife.studentportal.mapper.MarkMapper;
-import com.manulife.studentportal.repository.*;
-import com.manulife.studentportal.security.SecurityService;
-import com.manulife.studentportal.service.MarkService;
-import com.manulife.studentportal.util.GradeCalculator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.manulife.studentportal.dto.request.BatchMarkRequest;
+import com.manulife.studentportal.dto.request.CreateMarkRequest;
+import com.manulife.studentportal.dto.request.UpdateMarkRequest;
+import com.manulife.studentportal.dto.response.MarkResponse;
+import com.manulife.studentportal.entity.Exam;
+import com.manulife.studentportal.entity.Mark;
+import com.manulife.studentportal.entity.SchoolClass;
+import com.manulife.studentportal.entity.Student;
+import com.manulife.studentportal.entity.Teacher;
+import com.manulife.studentportal.exception.BusinessLogicException;
+import com.manulife.studentportal.exception.DuplicateResourceException;
+import com.manulife.studentportal.exception.ResourceNotFoundException;
+import com.manulife.studentportal.mapper.MarkMapper;
+import com.manulife.studentportal.repository.ExamRepository;
+import com.manulife.studentportal.repository.MarkRepository;
+import com.manulife.studentportal.repository.StudentRepository;
+import com.manulife.studentportal.repository.TeacherRepository;
+import com.manulife.studentportal.security.SecurityService;
+import com.manulife.studentportal.service.MarkService;
+import com.manulife.studentportal.util.GradeCalculator;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor

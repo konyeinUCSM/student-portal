@@ -1,10 +1,11 @@
 package com.manulife.studentportal.repository;
 
-import com.manulife.studentportal.entity.SchoolClass;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.manulife.studentportal.entity.SchoolClass;
 
 @Repository
 public interface SchoolClassRepository extends JpaRepository<SchoolClass, Long> {

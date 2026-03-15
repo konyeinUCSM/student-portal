@@ -1,10 +1,11 @@
 package com.manulife.studentportal.mapper;
 
-import com.manulife.studentportal.dto.response.UserResponse;
-import com.manulife.studentportal.entity.User;
+import java.util.List;
+
 import org.mapstruct.Mapper;
 
-import java.util.List;
+import com.manulife.studentportal.dto.response.UserResponse;
+import com.manulife.studentportal.entity.User;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
