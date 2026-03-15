@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,9 +49,6 @@ public class StudentPortalServiceImpl implements StudentPortalService {
         // Get student ID from JWT (NEVER from URL params)
         Long studentId = securityService.getCurrentProfileId();
 
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
-
         Page<Mark> marks = markRepository.findByStudentId(studentId, pageable);
         return marks.map(markMapper::toResponse);
     }
@@ -82,7 +79,7 @@ public class StudentPortalServiceImpl implements StudentPortalService {
 
         return marks.stream()
                 .map(markMapper::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -96,21 +93,17 @@ public class StudentPortalServiceImpl implements StudentPortalService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
-        // 2. Get all exams for student's class
-        Page<Exam> examsPage = examRepository.findBySchoolClassId(student.getSchoolClass().getId(), Pageable.unpaged());
-        List<Exam> allExams = examsPage.getContent();
-
-        // 3. Get all marks for this student
+        // 2. Get all marks for this student
         List<Mark> allMarks = markRepository.findByStudentId(studentId);
 
-        // 4. Group marks by subject
+        // 3. Group marks by subject
         Map<String, List<Mark>> marksBySubject = new HashMap<>();
         for (Mark mark : allMarks) {
             String subjectName = mark.getExam().getSubject().getName();
             marksBySubject.computeIfAbsent(subjectName, k -> new ArrayList<>()).add(mark);
         }
 
-        // 5. Calculate average for each subject
+        // 4. Calculate average for each subject
         List<SubjectGradeResponse> subjectGrades = new ArrayList<>();
         double totalPercentageSum = 0.0;
         int subjectCount = 0;

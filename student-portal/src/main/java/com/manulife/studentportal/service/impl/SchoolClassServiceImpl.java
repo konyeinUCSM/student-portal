@@ -2,7 +2,6 @@ package com.manulife.studentportal.service.impl;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class SchoolClassServiceImpl implements SchoolClassService {
 
+    private static final String CLASS_NOT_FOUND = CLASS_NOT_FOUND;
+
     private final SchoolClassRepository schoolClassRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
@@ -67,7 +68,7 @@ public class SchoolClassServiceImpl implements SchoolClassService {
     public SchoolClassResponse getById(Long id) {
         log.debug("Fetching class with id: {}", id);
         SchoolClass schoolClass = schoolClassRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(CLASS_NOT_FOUND + id));
         return schoolClassMapper.toResponse(schoolClass);
     }
 
@@ -89,7 +90,7 @@ public class SchoolClassServiceImpl implements SchoolClassService {
             Set<SchoolClass> assignedClasses = teacher.getClasses();
             List<SchoolClassResponse> classResponses = assignedClasses.stream()
                     .map(schoolClassMapper::toResponse)
-                    .collect(Collectors.toList());
+                    .toList();
 
             // Create a page from the list (simple pagination)
             int start = (int) pageable.getOffset();
@@ -107,7 +108,7 @@ public class SchoolClassServiceImpl implements SchoolClassService {
         log.info("Updating class with id: {}", id);
 
         SchoolClass schoolClass = schoolClassRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(CLASS_NOT_FOUND + id));
 
         // Validate name uniqueness (excluding current class)
         if (!schoolClass.getName().equals(request.getName()) &&
@@ -127,7 +128,7 @@ public class SchoolClassServiceImpl implements SchoolClassService {
         log.info("Soft deleting class with id: {}", id);
 
         SchoolClass schoolClass = schoolClassRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(CLASS_NOT_FOUND + id));
 
         schoolClass.setDeleted(true);
 
@@ -139,15 +140,11 @@ public class SchoolClassServiceImpl implements SchoolClassService {
     public List<StudentResponse> getStudents(Long id, Pageable pageable) {
         log.debug("Fetching students for class id: {}", id);
 
-        // Verify class exists
-        SchoolClass schoolClass = schoolClassRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + id));
-
         // Get all students in this class
         List<Student> students = studentRepository.findBySchoolClassId(id, pageable);
 
         return students.stream()
                 .map(studentMapper::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

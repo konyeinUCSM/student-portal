@@ -1,7 +1,6 @@
 package com.manulife.studentportal.service.impl;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class ExamServiceImpl implements ExamService {
 
+    private static final String EXAM_NOT_FOUND = "Exam not found with id: ";
+    private static final String TEACHER_NOT_FOUND = "Teacher not found with id: ";
+
     private final ExamRepository examRepository;
     private final SchoolClassRepository schoolClassRepository;
     private final SubjectRepository subjectRepository;
@@ -48,9 +50,7 @@ public class ExamServiceImpl implements ExamService {
     @Override
     public ExamResponse create(CreateExamRequest request) {
         log.info("Creating exam with name: {}", request.getName());
-
-        String role = securityService.getCurrentRole();
-
+        
         // Validate class exists
         SchoolClass schoolClass = schoolClassRepository.findById(request.getClassId())
                 .orElseThrow(() -> new ResourceNotFoundException("Class not found with id: " + request.getClassId()));
@@ -63,7 +63,7 @@ public class ExamServiceImpl implements ExamService {
         if (securityService.isTeacher()) {
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
+                    .orElseThrow(() -> new ResourceNotFoundException(TEACHER_NOT_FOUND + teacherId));
 
             boolean assignedToClass = teacher.getClasses().stream()
                     .anyMatch(c -> c.getId().equals(request.getClassId()));
@@ -104,7 +104,7 @@ public class ExamServiceImpl implements ExamService {
         log.debug("Fetching exam with id: {}", id);
 
         Exam exam = examRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Exam not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(EXAM_NOT_FOUND + id));
 
         if (securityService.isAdmin()) {
             // ADMIN sees all
@@ -144,11 +144,11 @@ public class ExamServiceImpl implements ExamService {
             // TEACHER gets exams for assigned classes
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
+                    .orElseThrow(() -> new ResourceNotFoundException(TEACHER_NOT_FOUND + teacherId));
 
             List<Long> assignedClassIds = teacher.getClasses().stream()
                     .map(SchoolClass::getId)
-                    .collect(Collectors.toList());
+                    .toList();
 
             if (assignedClassIds.isEmpty()) {
                 return Page.empty(pageable);
@@ -174,7 +174,7 @@ public class ExamServiceImpl implements ExamService {
         log.info("Updating exam with id: {}", id);
 
         Exam exam = examRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Exam not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(EXAM_NOT_FOUND + id));
 
         String role = securityService.getCurrentRole();
 
@@ -182,7 +182,7 @@ public class ExamServiceImpl implements ExamService {
         if ("TEACHER".equals(role)) {
             Long teacherId = securityService.getCurrentProfileId();
             Teacher teacher = teacherRepository.findById(teacherId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
+                    .orElseThrow(() -> new ResourceNotFoundException(TEACHER_NOT_FOUND + teacherId));
 
             Long examClassId = exam.getSchoolClass().getId();
             Long examSubjectId = exam.getSubject().getId();
@@ -229,7 +229,7 @@ public class ExamServiceImpl implements ExamService {
         log.info("Soft deleting exam with id: {}", id);
 
         Exam exam = examRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Exam not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(EXAM_NOT_FOUND + id));
 
         // Soft delete
         exam.setDeleted(true);
