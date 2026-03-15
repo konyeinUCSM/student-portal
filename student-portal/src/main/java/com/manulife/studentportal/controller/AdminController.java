@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import com.manulife.studentportal.security.AdminOnly;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +16,7 @@ import com.manulife.studentportal.dto.response.ApiResponse;
 import com.manulife.studentportal.dto.response.DashboardStatsResponse;
 import com.manulife.studentportal.dto.response.LoginSessionResponse;
 import com.manulife.studentportal.dto.response.PaginationMeta;
+import com.manulife.studentportal.security.AdminOnly;
 import com.manulife.studentportal.service.LoginSessionService;
 
 import io.swagger.v3.oas.annotations.Operation;

@@ -48,6 +48,7 @@ public class LoginSession extends BaseEntity{
     @Column(length = 45)
     private String ipAddress;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 
