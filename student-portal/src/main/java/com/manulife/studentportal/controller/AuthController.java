@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.manulife.studentportal.dto.request.ChangePasswordRequest;
 import com.manulife.studentportal.dto.request.LoginRequest;
-import com.manulife.studentportal.dto.response.ApiResponse;
+import com.manulife.studentportal.shared.dto.ApiResponse;
 import com.manulife.studentportal.dto.response.LoginResponse;
 import com.manulife.studentportal.security.SecurityService;
 import com.manulife.studentportal.service.AuthService;

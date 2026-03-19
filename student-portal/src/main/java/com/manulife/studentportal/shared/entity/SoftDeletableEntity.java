@@ -1,4 +1,4 @@
-package com.manulife.studentportal.entity;
+package com.manulife.studentportal.shared.entity;
 
 import java.time.LocalDateTime;
 

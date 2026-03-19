@@ -3,6 +3,8 @@ package com.manulife.studentportal.entity;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.manulife.studentportal.shared.entity.SoftDeletableEntity;
+
 import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.Column;

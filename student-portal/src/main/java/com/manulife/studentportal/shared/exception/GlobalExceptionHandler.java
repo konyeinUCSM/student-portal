@@ -1,4 +1,4 @@
-package com.manulife.studentportal.exception;
+package com.manulife.studentportal.shared.exception;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import com.manulife.studentportal.dto.response.ApiResponse;
+import com.manulife.studentportal.shared.dto.ApiResponse;
 
 import lombok.extern.slf4j.Slf4j;
 

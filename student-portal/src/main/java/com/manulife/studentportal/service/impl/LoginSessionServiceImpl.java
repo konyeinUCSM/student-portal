@@ -12,7 +12,7 @@ import com.manulife.studentportal.dto.response.DashboardStatsResponse;
 import com.manulife.studentportal.dto.response.LoginSessionResponse;
 import com.manulife.studentportal.entity.LoginSession;
 import com.manulife.studentportal.enums.Role;
-import com.manulife.studentportal.exception.ResourceNotFoundException;
+import com.manulife.studentportal.shared.exception.ResourceNotFoundException;
 import com.manulife.studentportal.repository.ExamRepository;
 import com.manulife.studentportal.repository.LoginSessionRepository;
 import com.manulife.studentportal.repository.SchoolClassRepository;

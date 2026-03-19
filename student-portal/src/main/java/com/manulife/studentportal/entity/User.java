@@ -3,6 +3,7 @@ package com.manulife.studentportal.entity;
 import org.hibernate.annotations.SQLRestriction;
 
 import com.manulife.studentportal.enums.Role;
+import com.manulife.studentportal.shared.entity.SoftDeletableEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

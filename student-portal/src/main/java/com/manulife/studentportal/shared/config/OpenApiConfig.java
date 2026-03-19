@@ -1,4 +1,4 @@
-package com.manulife.studentportal.config;
+package com.manulife.studentportal.shared.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

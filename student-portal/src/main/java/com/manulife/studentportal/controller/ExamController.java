@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.manulife.studentportal.dto.request.CreateExamRequest;
 import com.manulife.studentportal.dto.request.UpdateExamRequest;
-import com.manulife.studentportal.dto.response.ApiResponse;
+import com.manulife.studentportal.shared.dto.ApiResponse;
 import com.manulife.studentportal.dto.response.ExamResponse;
-import com.manulife.studentportal.dto.response.PaginationMeta;
+import com.manulife.studentportal.shared.dto.PaginationMeta;
 import com.manulife.studentportal.security.AdminOnly;
 import com.manulife.studentportal.security.AdminOrTeacher;
 import com.manulife.studentportal.security.AdminTeacherOrStudent;

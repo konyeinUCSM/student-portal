@@ -18,7 +18,7 @@ import com.manulife.studentportal.dto.response.SubjectGradeResponse;
 import com.manulife.studentportal.entity.Exam;
 import com.manulife.studentportal.entity.Mark;
 import com.manulife.studentportal.entity.Student;
-import com.manulife.studentportal.exception.ResourceNotFoundException;
+import com.manulife.studentportal.shared.exception.ResourceNotFoundException;
 import com.manulife.studentportal.mapper.MarkMapper;
 import com.manulife.studentportal.repository.ExamRepository;
 import com.manulife.studentportal.repository.MarkRepository;

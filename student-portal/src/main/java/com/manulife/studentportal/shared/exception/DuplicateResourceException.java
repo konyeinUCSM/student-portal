@@ -1,4 +1,4 @@
-package com.manulife.studentportal.exception;
+package com.manulife.studentportal.shared.exception;
 
 import org.springframework.http.HttpStatus;
 

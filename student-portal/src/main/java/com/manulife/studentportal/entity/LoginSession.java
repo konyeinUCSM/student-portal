@@ -3,6 +3,8 @@ package com.manulife.studentportal.entity;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.NotFound;
+
+import com.manulife.studentportal.shared.entity.BaseEntity;
 import org.hibernate.annotations.NotFoundAction;
 
 import jakarta.persistence.Column;

@@ -4,6 +4,8 @@ import java.time.LocalDate;
 
 import org.hibernate.annotations.SQLRestriction;
 
+import com.manulife.studentportal.shared.entity.SoftDeletableEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

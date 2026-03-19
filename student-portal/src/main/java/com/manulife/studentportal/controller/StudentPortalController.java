@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.manulife.studentportal.dto.response.ApiResponse;
+import com.manulife.studentportal.shared.dto.ApiResponse;
 import com.manulife.studentportal.dto.response.GradeSummaryResponse;
 import com.manulife.studentportal.dto.response.MarkResponse;
-import com.manulife.studentportal.dto.response.PaginationMeta;
+import com.manulife.studentportal.shared.dto.PaginationMeta;
 import com.manulife.studentportal.security.StudentOnly;
 import com.manulife.studentportal.service.StudentPortalService;
 

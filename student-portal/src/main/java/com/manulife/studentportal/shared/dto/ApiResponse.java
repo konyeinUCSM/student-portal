@@ -1,4 +1,4 @@
-package com.manulife.studentportal.dto.response;
+package com.manulife.studentportal.shared.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

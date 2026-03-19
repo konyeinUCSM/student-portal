@@ -1,4 +1,4 @@
-package com.manulife.studentportal.dto.response;
+package com.manulife.studentportal.shared.dto;
 
 import org.springframework.data.domain.Page;
 
