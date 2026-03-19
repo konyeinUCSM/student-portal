@@ -1,4 +1,4 @@
-package com.manulife.studentportal.enums;
+package com.manulife.studentportal.user;
 
 public enum Role {
     ADMIN,

@@ -1,8 +1,8 @@
-package com.manulife.studentportal.dto.response;
+package com.manulife.studentportal.user.web;
 
 import java.time.LocalDateTime;
 
-import com.manulife.studentportal.enums.Role;
+import com.manulife.studentportal.user.Role;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

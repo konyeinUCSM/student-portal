@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.manulife.studentportal.shared.entity.SoftDeletableEntity;
+import com.manulife.studentportal.user.internal.User;
 
 import org.hibernate.annotations.SQLRestriction;
 

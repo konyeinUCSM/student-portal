@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.manulife.studentportal.dto.response.DashboardStatsResponse;
 import com.manulife.studentportal.dto.response.LoginSessionResponse;
 import com.manulife.studentportal.entity.LoginSession;
-import com.manulife.studentportal.enums.Role;
+import com.manulife.studentportal.user.Role;
 import com.manulife.studentportal.shared.exception.ResourceNotFoundException;
 import com.manulife.studentportal.repository.ExamRepository;
 import com.manulife.studentportal.repository.LoginSessionRepository;
@@ -19,7 +19,7 @@ import com.manulife.studentportal.repository.SchoolClassRepository;
 import com.manulife.studentportal.repository.StudentRepository;
 import com.manulife.studentportal.repository.SubjectRepository;
 import com.manulife.studentportal.repository.TeacherRepository;
-import com.manulife.studentportal.repository.UserRepository;
+import com.manulife.studentportal.user.internal.UserRepository;
 import com.manulife.studentportal.service.LoginSessionService;
 
 import jakarta.persistence.criteria.Predicate;

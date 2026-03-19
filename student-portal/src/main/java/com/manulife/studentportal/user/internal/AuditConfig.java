@@ -1,4 +1,4 @@
-package com.manulife.studentportal.config;
+package com.manulife.studentportal.user.internal;
 
 import java.util.Optional;
 

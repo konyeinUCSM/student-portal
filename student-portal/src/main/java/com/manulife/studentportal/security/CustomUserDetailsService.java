@@ -5,11 +5,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.manulife.studentportal.entity.User;
-import com.manulife.studentportal.enums.Role;
+import com.manulife.studentportal.user.internal.User;
+import com.manulife.studentportal.user.Role;
 import com.manulife.studentportal.repository.StudentRepository;
 import com.manulife.studentportal.repository.TeacherRepository;
-import com.manulife.studentportal.repository.UserRepository;
+import com.manulife.studentportal.user.internal.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 

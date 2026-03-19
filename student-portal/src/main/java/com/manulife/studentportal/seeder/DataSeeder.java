@@ -5,9 +5,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import com.manulife.studentportal.entity.User;
-import com.manulife.studentportal.enums.Role;
-import com.manulife.studentportal.repository.UserRepository;
+import com.manulife.studentportal.user.internal.User;
+import com.manulife.studentportal.user.Role;
+import com.manulife.studentportal.user.internal.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

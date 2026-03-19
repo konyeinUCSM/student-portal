@@ -1,4 +1,4 @@
-package com.manulife.studentportal.repository;
+package com.manulife.studentportal.user.internal;
 
 import java.util.Optional;
 
@@ -8,8 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import com.manulife.studentportal.entity.User;
-import com.manulife.studentportal.enums.Role;
+import com.manulife.studentportal.user.Role;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {

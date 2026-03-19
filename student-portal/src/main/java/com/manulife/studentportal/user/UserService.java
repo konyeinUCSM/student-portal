@@ -1,12 +1,11 @@
-package com.manulife.studentportal.service;
+package com.manulife.studentportal.user;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.manulife.studentportal.dto.request.CreateUserRequest;
-import com.manulife.studentportal.dto.request.UpdateUserRequest;
-import com.manulife.studentportal.dto.response.UserResponse;
-import com.manulife.studentportal.enums.Role;
+import com.manulife.studentportal.user.web.CreateUserRequest;
+import com.manulife.studentportal.user.web.UpdateUserRequest;
+import com.manulife.studentportal.user.web.UserResponse;
 
 public interface UserService {
 

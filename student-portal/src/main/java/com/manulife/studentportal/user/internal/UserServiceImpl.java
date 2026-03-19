@@ -1,4 +1,4 @@
-package com.manulife.studentportal.service.impl;
+package com.manulife.studentportal.user.internal;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -6,22 +6,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.manulife.studentportal.dto.request.CreateUserRequest;
-import com.manulife.studentportal.dto.request.UpdateUserRequest;
-import com.manulife.studentportal.dto.response.UserResponse;
-import com.manulife.studentportal.entity.User;
-import com.manulife.studentportal.enums.Role;
+import com.manulife.studentportal.user.Role;
+import com.manulife.studentportal.user.UserService;
+import com.manulife.studentportal.user.web.CreateUserRequest;
+import com.manulife.studentportal.user.web.UpdateUserRequest;
+import com.manulife.studentportal.user.web.UserResponse;
 import com.manulife.studentportal.shared.exception.DuplicateResourceException;
 import com.manulife.studentportal.shared.exception.InvalidOperationException;
 import com.manulife.studentportal.shared.exception.ResourceNotFoundException;
-import com.manulife.studentportal.mapper.UserMapper;
 import com.manulife.studentportal.repository.LoginSessionRepository;
 import com.manulife.studentportal.repository.MarkRepository;
 import com.manulife.studentportal.repository.StudentRepository;
 import com.manulife.studentportal.repository.TeacherRepository;
-import com.manulife.studentportal.repository.UserRepository;
 import com.manulife.studentportal.security.SecurityService;
-import com.manulife.studentportal.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

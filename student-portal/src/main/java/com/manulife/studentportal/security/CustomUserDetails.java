@@ -7,7 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.manulife.studentportal.entity.User;
+import com.manulife.studentportal.user.internal.User;
 
 import lombok.Getter;
 

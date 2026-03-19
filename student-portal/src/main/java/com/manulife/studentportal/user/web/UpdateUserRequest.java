@@ -1,4 +1,4 @@
-package com.manulife.studentportal.dto.request;
+package com.manulife.studentportal.user.web;
 
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;

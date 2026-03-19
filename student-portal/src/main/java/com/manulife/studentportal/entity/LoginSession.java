@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.NotFound;
 
 import com.manulife.studentportal.shared.entity.BaseEntity;
+import com.manulife.studentportal.user.internal.User;
 import org.hibernate.annotations.NotFoundAction;
 
 import jakarta.persistence.Column;
