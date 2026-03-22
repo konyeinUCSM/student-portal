@@ -18,6 +18,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format-sql: true
+        "[hibernate.multiTenancy]": SCHEMA
 
 server:
   port: 8081

@@ -1,0 +1,67 @@
+package com.manulife.studentportal.academic.internal;
+
+import org.hibernate.annotations.SQLRestriction;
+
+import com.manulife.studentportal.academic.Exam;
+import com.manulife.studentportal.shared.entity.SoftDeletableEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "marks", indexes = {
+                @Index(name = "idx_mark_student_id", columnList = "student_id"),
+                @Index(name = "idx_mark_exam_id", columnList = "exam_id")
+}, uniqueConstraints = {
+                @UniqueConstraint(name = "uk_mark_student_exam", columnNames = { "student_id", "exam_id", "deleted_id" })
+})
+@SQLRestriction("deleted = false")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Mark extends SoftDeletableEntity {
+
+        @Column(nullable = false)
+        private Double score;
+
+        @Column(nullable = false, length = 2)
+        private String grade;
+
+        @Column(length = 255)
+        private String remarks;
+
+        /**
+         * Soft-delete uniqueness sentinel for MySQL.
+         * active = 0 (all active marks share this value, constraint blocks duplicates)
+         * deleted = getId() (each deleted mark has a unique value, constraint allows coexistence)
+         */
+        @Builder.Default
+        @Column(name = "deleted_id", nullable = false)
+        private Long deletedId = 0L;
+
+        @Column(name = "student_id", nullable = false)
+        private Long studentId;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "exam_id", nullable = false)
+        private Exam exam;
+
+        @Override
+        public void softDelete(String username) {
+                this.deletedId = this.getId();
+                super.softDelete(username);
+        }
+}

@@ -6,6 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.manulife.studentportal.user.User;
+import com.manulife.studentportal.user.UserRepository;
 import com.manulife.studentportal.user.Role;
 import com.manulife.studentportal.user.UserService;
 import com.manulife.studentportal.user.web.CreateUserRequest;
@@ -14,11 +16,11 @@ import com.manulife.studentportal.user.web.UserResponse;
 import com.manulife.studentportal.shared.exception.DuplicateResourceException;
 import com.manulife.studentportal.shared.exception.InvalidOperationException;
 import com.manulife.studentportal.shared.exception.ResourceNotFoundException;
-import com.manulife.studentportal.repository.LoginSessionRepository;
-import com.manulife.studentportal.repository.MarkRepository;
-import com.manulife.studentportal.repository.StudentRepository;
-import com.manulife.studentportal.repository.TeacherRepository;
-import com.manulife.studentportal.security.SecurityService;
+import com.manulife.studentportal.auth.LoginSessionService;
+import com.manulife.studentportal.academic.AcademicQueryService;
+import com.manulife.studentportal.student.StudentRepository;
+import com.manulife.studentportal.teacher.TeacherRepository;
+import com.manulife.studentportal.shared.security.SecurityService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +36,8 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
-    private final MarkRepository markRepository;
-    private final LoginSessionRepository loginSessionRepository;
+    private final AcademicQueryService academicQueryService;
+    private final LoginSessionService loginSessionService;
     private final SecurityService securityService;
 
     @Override
@@ -121,7 +123,7 @@ public class UserServiceImpl implements UserService {
         });
 
         studentRepository.findByUserId(id).ifPresent(student -> {
-            if (markRepository.existsByStudentId(student.getId())) {
+            if (academicQueryService.existsMarkForStudent(student.getId())) {
                 throw new InvalidOperationException(
                         "Cannot delete user id " + id + ": associated student has academic mark records. Delete the marks first.");
             }
@@ -130,15 +132,7 @@ public class UserServiceImpl implements UserService {
         });
 
         // Terminate all active sessions for this user
-        loginSessionRepository.findAll((root, query, cb) ->
-            cb.and(
-                cb.equal(root.get("user").get("id"), id),
-                cb.equal(root.get("active"), true)
-            )
-        ).forEach(session -> {
-            session.setActive(false);
-            log.info("Terminated active session: sessionId={}, tokenId={}", session.getId(), session.getTokenId());
-        });
+        loginSessionService.terminateAllUserSessions(id);
 
         log.info("User soft deleted successfully with id: {}", id);
     }

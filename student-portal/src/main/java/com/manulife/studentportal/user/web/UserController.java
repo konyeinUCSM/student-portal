@@ -22,7 +22,7 @@ import com.manulife.studentportal.shared.dto.ApiResponse;
 import com.manulife.studentportal.shared.dto.PaginationMeta;
 import com.manulife.studentportal.user.Role;
 import com.manulife.studentportal.user.UserService;
-import com.manulife.studentportal.security.AdminOnly;
+import com.manulife.studentportal.shared.annotation.AdminOnly;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

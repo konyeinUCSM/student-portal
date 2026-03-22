@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 
+import com.manulife.studentportal.user.User;
 import com.manulife.studentportal.user.web.UserResponse;
 
 @Mapper(componentModel = "spring")

@@ -1,4 +1,4 @@
 @org.springframework.modulith.ApplicationModule(
-    allowedDependencies = { "shared" }
+    allowedDependencies = {"shared", "auth", "student", "teacher", "academic"}
 )
 package com.manulife.studentportal.user;

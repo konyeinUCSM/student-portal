@@ -1,0 +1,14 @@
+package com.manulife.studentportal.tenant.internal;
+
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface TenantRepository extends JpaRepository<Tenant, Long> {
+
+    Optional<Tenant> findBySchemaName(String schemaName);
+
+    boolean existsBySchemaName(String schemaName);
+}
